@@ -5,6 +5,7 @@ import requests
 from .data_structs import BaseURLCollection, ResponseContainer, Credential, Config
 from .parser import ResponseParser
 from ..helper.printer import PrettyPrinter
+from ..helper.snippets import dict_updater
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,8 @@ class API:
     PRINTER = PrettyPrinter._get_default()
     ALWAYS_CHECK_PREFIXED_BASE_URL = True
     
-    __repr_constructor = dict(format="<%(classname)s %(values)s>", values={'LoggedIn':'_logged_in'}, values_sep=" ", values_entry_format="%(label)s=%(value)s")
+    _repr_format = "<%(classname)s LoggedIn=%(_logged_in)s>" # Format of __repr__
+    _repr_used_properties = [] # used properties in __repr__ formatting, if no properties are used, leave this empty.
     
     def __init__(self, credentials: Credential, config: Config, initialize=True, **kw):
         self.credentials = credentials
@@ -41,11 +43,8 @@ class API:
         return self.session.cookies
     
     def __repr__(self):
-        settings = self.__class__.__repr_constructor
-        return settings['format'] % {'classname': self.__class__.__name__, 
-                                        'values': settings['values_sep'].join(
-                                            [settings['values_entry_format'] % {'label':label, 'value':getattr(self, attrname)} for label, attrname in settings['values'].items()]
-                                        )}
+        mapping = dict_updater(self.__dict__, {name:getattr(self, name) for name in self.__class__._repr_used_properties})
+        return self.__class__._repr_format % dict(classname=self.__class__.__name__, **mapping)
 
     def _init(self):
         """Where you can set up the session, login, initialize directories, load cookies, etc. by default, this will set _logged_in value as login method return value."""

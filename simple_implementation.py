@@ -53,6 +53,9 @@ class TestOsuAPI(API):
     URLS = UrlCollection
     PARSER = RegexResponseParser(RegexCollection)
     
+    _repr_format = "<%(classname)s LoggedIn=%(_logged_in)s Username=%(username)s>"
+    _repr_used_properties = ['username']
+    
     def __init__(self, api_key: str, credentials: Credential, config: Config, initialize=True, **kw):
         super().__init__(credentials, config, initialize=False, **kw)
         self.api_key = api_key
@@ -60,6 +63,10 @@ class TestOsuAPI(API):
         
         if initialize:
             self._init(**kw)
+    
+    @property
+    def username(self):
+        return self.credentials.username
     
     def _init(self):
         self.session.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36'}
