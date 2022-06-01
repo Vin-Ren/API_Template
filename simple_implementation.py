@@ -2,7 +2,7 @@ from enum import Enum
 
 from base.api.api import API
 from base.api.data_structs import BaseURLCollection, ObjectifiedDict, Credential, Config
-from base.api.parser import RegexResponseParser
+from base.api.parser import RegexParser
 from base.api.data_structs import RegexCollection
 
 
@@ -51,7 +51,7 @@ class User(BaseOsuObject):
 
 class TestOsuAPI(API):
     URLS = UrlCollection
-    PARSER = RegexResponseParser(RegexCollection)
+    PARSER = RegexParser(RegexCollection)
     
     _repr_format = "<%(classname)s LoggedIn=%(_logged_in)s Username=%(username)s>"
     _repr_used_properties = ['username']

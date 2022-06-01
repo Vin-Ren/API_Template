@@ -3,7 +3,7 @@ import logging
 import requests
 
 from .data_structs import BaseURLCollection, ResponseContainer, Credential, Config
-from .parser import ResponseParser
+from .parser import Parser
 from ..helper.printer import PrettyPrinter
 from ..helper.snippets import dict_updater
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class API:
     URLS = BaseURLCollection
-    PARSER = ResponseParser
+    PARSER = Parser
     PRINTER = PrettyPrinter._get_default()
     ALWAYS_CHECK_PREFIXED_BASE_URL = True
     

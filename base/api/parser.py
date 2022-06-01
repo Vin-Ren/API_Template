@@ -3,13 +3,13 @@ import abc
 import requests
 
 
-class ResponseParser(abc.ABC):
+class Parser(abc.ABC):
     @abc.abstractmethod
     def parse(self):
         pass
 
 
-class RegexResponseParser(ResponseParser):
+class RegexParser(Parser):
     def __getattribute__(self, name: str):
         try:
             return super().__getattribute__(name)
