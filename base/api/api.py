@@ -2,10 +2,11 @@ import logging
 
 import requests
 
-from .data_structs import BaseURLCollection, ResponseContainer, Credential, Config
+from ..data_structs import ReprCustomMapping, Credential, Config
+from .data_structs import BaseURLCollection, ResponseContainer
 from .parser import Parser
 from ..helper.printer import PrettyPrinter
-from ..helper.snippets import dict_updater
+
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,6 @@ class API:
     ALWAYS_CHECK_PREFIXED_BASE_URL = True
     
     _repr_format = "<%(classname)s LoggedIn=%(_logged_in)s>" # Format of __repr__
-    _repr_used_properties = [] # used properties in __repr__ formatting, if no properties are used, leave this empty.
     
     def __init__(self, credentials: Credential, config: Config, initialize=True, **kw):
         self.credentials = credentials
@@ -43,8 +43,7 @@ class API:
         return self.session.cookies
     
     def __repr__(self):
-        mapping = dict_updater(self.__dict__, {name:getattr(self, name) for name in self.__class__._repr_used_properties})
-        return self.__class__._repr_format % dict(classname=self.__class__.__name__, **mapping)
+        return self.__class__._repr_format % ReprCustomMapping.get_instance(self)
 
     def _init(self):
         """Where you can set up the session, login, initialize directories, load cookies, etc. by default, this will set _logged_in value as login method return value."""
