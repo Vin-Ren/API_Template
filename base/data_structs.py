@@ -1,3 +1,7 @@
+import io
+import time
+
+import requests
 
 
 class ObjectifiedDict(dict):
@@ -26,6 +30,43 @@ class Credential(ObjectifiedDict):
     pass
 
 
+class Timer:
+    def __init__(self, start_time=None):
+        self.start_time = start_time
+        self.current_time = None
+        self.end_time = None
+    
+    @property
+    def elapsed(self):
+        return self.end_time-self.current_time if self.start_time is not None and self.current_time is not None else 0
+
+    @property
+    def duration(self):
+        return self.end_time-self.end_time if self.start_time is not None and self.end_time is not None else 0
+    
+    @property
+    def ended(self):
+        return self.end_time is not None
+    
+    def start(self, explicit_time=None):
+        self.start_time = (explicit_time if isinstance(explicit_time, int) else time.time())-1e-9
+        return self
+    
+    def update_current(self, explicit_time=None):
+        self.current_time = explicit_time if isinstance(explicit_time, int) else time.time()
+        return self
+    
+    def end(self, explicit_time=None):
+        self.end_time = explicit_time if isinstance(explicit_time, int) else time.time()
+        return self
+
+
+class ProgressInfo(ObjectifiedDict):
+    __slots__ = ['stream', 'pipe_handler', 'time_info']
+    def __init__(self, *, stream: requests.Response, pipe_handler: io.IOBase, time_info: Timer):
+        super().__init__(stream=stream, pipe_handler=pipe_handler, time_info=time_info)
+
+
 class ReprCustomMapping:
     _INSTANCES = {}
     @classmethod
@@ -41,9 +82,6 @@ class ReprCustomMapping:
         self._dict = dict(classname=self._object.__class__.__name__)
         self.update_data()
     
-    def update_data(self):
-        self._dict = self._object.__dict__
-    
     def __setitem__(self, name, value):
         self._dict[name] = value
     
@@ -51,10 +89,16 @@ class ReprCustomMapping:
         try:
             return self._dict[name]
         except KeyError:
-            try:
-                getattr(self._object, name)
-            except AttributeError:
-                curr_obj = self._object
-                for name in [attrname for attrname in name.split('.') if len(attrname) > 0]:
-                    curr_obj = getattr(curr_obj, name)
-                return curr_obj
+            return self.fallback_getter(name)
+    
+    def fallback_getter(self, name):
+        try:
+            getattr(self._object, name)
+        except AttributeError:
+            curr_obj = self._object
+            for name in [attrname for attrname in name.split('.') if len(attrname) > 0]:
+                curr_obj = getattr(curr_obj, name)
+            return curr_obj
+    
+    def update_data(self):
+        self._dict = self._object.__dict__

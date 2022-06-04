@@ -2,16 +2,17 @@ import logging
 
 import requests
 
-from ..data_structs import ReprCustomMapping, Credential, Config
+from ..data_structs import Credential, Config
 from .data_structs import BaseURLCollection, ResponseContainer
 from .parser import Parser
+from ..helper.class_mixin import ReprMixin
 from ..helper.printer import PrettyPrinter
 
 
 logger = logging.getLogger(__name__)
 
 
-class API:
+class API(ReprMixin):
     URLS = BaseURLCollection
     PARSER = Parser
     PRINTER = PrettyPrinter._get_default()
@@ -41,16 +42,13 @@ class API:
     def cookies(self):
         """Shorthand for api.session.cookies"""
         return self.session.cookies
-    
-    def __repr__(self):
-        return self.__class__._repr_format % ReprCustomMapping.get_instance(self)
 
     def _init(self):
         """Where you can set up the session, login, initialize directories, load cookies, etc. by default, this will set _logged_in value as login method return value."""
         self._logged_in = bool(self.login())
     
     def login(self):
-        """Where you can do your login process. By default returns True. Should only return booleans."""
+        """Where you can do your login process. By default returns True. Should only return booleans which represents the result of the login action."""
         return True
 
     def request_params_preprocessor(self, params):
