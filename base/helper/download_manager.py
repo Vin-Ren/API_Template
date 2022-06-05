@@ -7,6 +7,7 @@ from .snippets import metric_size_formatter, make_progress_bar
 
 
 class DownloadFileHandler:
+    TEMPORARY_DIR = 'temp'
     TEMPORARY_EXTENSION = 'tmp'
     CHUNK_SIZE = 512
     
@@ -18,8 +19,14 @@ class DownloadFileHandler:
     
     def __init__(self, filename):
         self.filename = filename
-        self.temporary_filename = os.path.join(filename, self.TEMPORARY_EXTENSION)
+        self.temporary_filename = os.path.join(self.__class__.TEMPORARY_DIR, filename, self.__class__.TEMPORARY_EXTENSION)
         self.temp_handler = open(self.temporary_filename, 'wb')
+        
+        if len(self.__class__.TEMPORARY_DIR) > 0:
+            try:
+                os.makedirs(self.__class__.TEMPORARY_DIR)
+            except:
+                pass
     
     def __enter__(self):
         return self
@@ -42,7 +49,7 @@ class DownloadFileHandler:
                     dest_file.write(content)
     
     def drop(self):
-        os.remove(os.path.join(os.path.abspath(), self.temporary_filename))
+        os.remove(os.path.join(os.path.abspath(), self.TEMPORARY_DIR, self.temporary_filename))
 
 
 class DownloadManager:
@@ -83,10 +90,9 @@ class DownloadManager:
         print(make_progress_bar(progress.pipe_handler.tell(), length=self.config.download_progress_bar_length, vmax=progress.content_length, suffix=suffix), end=' '*5)
     
     def default_finished_hook(self, progress: ProgressInfo):
-        pass
+        print("Downloaded file in %ds" % round(progress.time_info.duration, 2))
     
     def download_to_file(self, filename, *session_args, retry_download=True, **session_kwargs):
-        finished = False
         timer = Timer().start()
         with self.session.get(*session_args, **session_kwargs) as stream, DownloadFileHandler(filename) as file_handler:
             prog_info = ProgressInfo(stream=stream, pipe_handler=file_handler, time_info=timer)

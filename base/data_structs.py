@@ -49,15 +49,15 @@ class Timer:
         return self.end_time is not None
     
     def start(self, explicit_time=None):
-        self.start_time = (explicit_time if isinstance(explicit_time, int) else time.time())-1e-9
+        self.start_time = (explicit_time if isinstance(explicit_time, (int, float)) else time.time())-1e-9
         return self
     
     def update_current(self, explicit_time=None):
-        self.current_time = explicit_time if isinstance(explicit_time, int) else time.time()
+        self.current_time = explicit_time if isinstance(explicit_time, (int, float)) else time.time()
         return self
     
     def end(self, explicit_time=None):
-        self.end_time = explicit_time if isinstance(explicit_time, int) else time.time()
+        self.end_time = explicit_time if isinstance(explicit_time, (int, float)) else time.time()
         return self
 
 
@@ -65,6 +65,10 @@ class ProgressInfo(ObjectifiedDict):
     __slots__ = ['stream', 'pipe_handler', 'time_info']
     def __init__(self, *, stream: requests.Response, pipe_handler: io.IOBase, time_info: Timer):
         super().__init__(stream=stream, pipe_handler=pipe_handler, time_info=time_info)
+    
+    @property
+    def finished(self):
+        return self.time_info.ended
 
 
 class ReprCustomMapping:
