@@ -1,8 +1,10 @@
 
 from types import NoneType
-from typing import Callable
+from typing import Callable, Dict
 
 from ..data_structs import ReprCustomMapping
+
+from ..plugins.base import BasePlugin
 
 
 class ReprMixin:
@@ -10,6 +12,17 @@ class ReprMixin:
     
     def __repr__(self):
         return self.__class__._repr_format % ReprCustomMapping.get_instance(self)
+
+
+class PluggableMixin:
+    PLUGINS: Dict[str, BasePlugin] = []
+    
+    def __getitem__(self, name):
+        return self._plugins.__getitem__(name)
+    
+    def __init__(self, *args, **kwargs):
+        self._plugins = {name: plugin(self) for name, plugin in self.__class__.PLUGINS.items()}
+        super().__init__(*args, **kwargs)
 
 
 class LogGetattrMixin:
