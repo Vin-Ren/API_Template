@@ -17,6 +17,7 @@ class PluggableMixin:
     PLUGINS: Union[List[BasePlugin], Dict[str, BasePlugin]] = []
     PLUGINS_ACCESSABLE_THROUGH_INSTANCE_VARIABLE = False
     ENABLE_DIRECT_GETATTR_PLUGINS_ACCESS = False
+    INHERIT_PLUGINS = True
     
     def __getattribute__(self, name: str):
         try:
@@ -50,16 +51,18 @@ class PluggableMixin:
     def __init__(self, *args, **kwargs):
         if isinstance(self.__class__.PLUGINS, dict):
             # Updating plugins
-            plugins = {}
-            [plugins.update(current_cls_plugin) for current_cls_plugin in reversed([cls.PLUGINS for cls in self.__class__.mro() if issubclass(cls, self.__class__) and isinstance(cls.PLUGINS, dict)])]
-            self.__class__.PLUGINS = plugins
+            if self.__class__.INHERIT_PLUGINS:
+                plugins = {}
+                [plugins.update(current_cls_plugin) for current_cls_plugin in reversed([cls.PLUGINS for cls in self.__class__.mro() if issubclass(cls, self.__class__) and isinstance(cls.PLUGINS, dict)])]
+                self.__class__.PLUGINS = plugins
             
             self._plugins = {name: plugin(self) for name, plugin in self.__class__.PLUGINS.items()}
         else:
             # Updating plugins
-            plugins = []
-            [plugins.extend(current_cls_plugin) for current_cls_plugin in reversed([cls.PLUGINS for cls in self.__class__.mro() if issubclass(cls, self.__class__) and isinstance(cls.PLUGINS, list)])]
-            self.__class__.PLUGINS = list(set(plugins))
+            if self.__class__.INHERIT_PLUGINS:
+                plugins = []
+                [plugins.extend(current_cls_plugin) for current_cls_plugin in reversed([cls.PLUGINS for cls in self.__class__.mro() if issubclass(cls, self.__class__) and isinstance(cls.PLUGINS, list)])]
+                self.__class__.PLUGINS = list(set(plugins))
             
             if self.__class__.PLUGINS_ACCESSABLE_THROUGH_INSTANCE_VARIABLE:
                 self._plugins = {plugin.__name__: plugin(self) for plugin in self.__class__.PLUGINS}
