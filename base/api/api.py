@@ -2,11 +2,13 @@ import logging
 
 import requests
 
+
 from ..data_structs import Credential, Config
 from .data_structs import BaseURLCollection, ResponseContainer
 from .parser import Parser
 from ..helper.class_mixin import ReprMixin, PluggableMixin
 from ..plugins.download_manager import DownloadManager
+from ..plugins.cookies_manager import CookiesManager
 from ..helper.printer import PrettyPrinter
 
 
@@ -19,7 +21,7 @@ class API(ReprMixin, PluggableMixin):
     PRINTER = PrettyPrinter._get_default()
     ALWAYS_CHECK_PREFIXED_BASE_URL = True
     
-    PLUGINS = [DownloadManager]
+    PLUGINS = [DownloadManager, CookiesManager]
     
     _repr_format = "<%(classname)s LoggedIn=%(_logged_in)s>" # Format of __repr__
     
@@ -76,7 +78,6 @@ class API(ReprMixin, PluggableMixin):
         self.PRINTER.print_debug('Request Process', 
                                 {'Method':method, 'Url':url, 'Params': params, 'Status Code': resp.status_code})
         return resp
-    
     
     def _get(self, *args, **kwargs):
         "Shorthand for api._request with method=GET"
