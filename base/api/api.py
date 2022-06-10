@@ -5,19 +5,21 @@ import requests
 from ..data_structs import Credential, Config
 from .data_structs import BaseURLCollection, ResponseContainer
 from .parser import Parser
-from ..helper.class_mixin import ReprMixin
-from ..helper.download_manager import DownloadManager
+from ..helper.class_mixin import ReprMixin, PluggableMixin
+from ..plugins.download_manager import DownloadManager
 from ..helper.printer import PrettyPrinter
 
 
 logger = logging.getLogger(__name__)
 
 
-class API(ReprMixin):
+class API(ReprMixin, PluggableMixin):
     URLS = BaseURLCollection
     PARSER = Parser
     PRINTER = PrettyPrinter._get_default()
     ALWAYS_CHECK_PREFIXED_BASE_URL = True
+    
+    PLUGINS = [DownloadManager]
     
     _repr_format = "<%(classname)s LoggedIn=%(_logged_in)s>" # Format of __repr__
     
@@ -28,7 +30,6 @@ class API(ReprMixin):
         self.recent_responses = ResponseContainer()
         self.recent_method_response = dict.fromkeys(['request'])
         self.session = requests.Session()
-        self.download_manager = DownloadManager(self.session)
         
         self._logged_in = False
 
@@ -47,7 +48,7 @@ class API(ReprMixin):
 
     def _init(self):
         """Where you can set up the session, login, initialize directories, load cookies, etc. by default, this will set _logged_in value as login method return value."""
-        self.download_manager.register_defaults()
+        self[DownloadManager].register_defaults()
         self._logged_in = bool(self.login())
     
     def login(self):

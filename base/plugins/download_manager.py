@@ -1,9 +1,9 @@
 import os
-import time
 
 
+from .base import BasePlugin
 from ..data_structs import ProgressInfo, Timer
-from .snippets import metric_size_formatter, make_progress_bar
+from ..helper.snippets import metric_size_formatter, make_progress_bar
 
 
 class DownloadFileHandler:
@@ -52,11 +52,11 @@ class DownloadFileHandler:
         os.remove(os.path.join(os.path.abspath(), self.TEMPORARY_DIR, self.temporary_filename))
 
 
-class DownloadManager:
+class DownloadManager(BasePlugin):
     DOWNLOAD_CHUNK_SIZE = 512
     
-    def __init__(self, session):
-        self.session = session
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         
         self.predownload_hooks = []
         self.progress_hooks = []
