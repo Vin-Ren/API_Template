@@ -20,3 +20,10 @@ class ResponseContainer(list):
     @property
     def last(self):
         return self[-1] if len(self) >= 1 else None
+
+
+class BaseAPIObject(ObjectifiedDict):
+    REQUIRED_FIELDS = []
+    @property
+    def valid(self):
+        return all(map(lambda key:self.__contains__(key), self.REQUIRED_FIELDS))
