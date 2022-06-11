@@ -59,7 +59,7 @@ class API(ReprMixin, PluggableMixin):
         return True
 
     def request_params_preprocessor(self, params):
-        """Modify request params before request. Could be useful if you need to add stuff like apiKey."""
+        """Modify request params before request. Could be useful if you need to add stuff like apiKey. This is applied to all requests passed through _request and request method."""
         return params
 
     def _request(self, method: str, url: str, *, params: dict = {}, **kw):
@@ -76,6 +76,7 @@ class API(ReprMixin, PluggableMixin):
         self.recent_responses.append(resp)
         self.recent_method_response['request'] = resp
         
+        logger.debug("Request Process: Method=%s Url=%s Params=%s StatusCode=%s" % (method, url, params, resp.status_code))
         self.PRINTER.print_debug('Request Process', 
                                 {'Method':method, 'Url':url, 'Params': params, 'Status Code': resp.status_code})
         return resp

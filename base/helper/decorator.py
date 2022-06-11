@@ -8,6 +8,7 @@ from .placeholder import LibraryPlaceholder
 
 
 def require_attrs(required_attr_names: List[str]):
+    """Checks whether the instance has all the required attributes"""
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -20,6 +21,10 @@ def require_attrs(required_attr_names: List[str]):
 
 
 def check_attrs(__checks: Dict[str, Tuple[callable, BaseException]], *, _ignore_missing_attrs=True, **kwargs: Dict[str,Tuple[callable, BaseException]]):
+    """
+    Applies all supplied checks to their corresponding target attribute, and if they failed, raise the supplied exception.
+    Checks are passed in as a positional only dictionary or keyword arguments. the structure of these checks => {attribute_name: (check_function, initialized_exception_to_be_raised)}
+    """
     __checks.update(kwargs)
     def decorator(func):
         @wraps(func)
@@ -38,6 +43,7 @@ def check_attrs(__checks: Dict[str, Tuple[callable, BaseException]], *, _ignore_
 
 
 def handle_exception(handler: Callable[[BaseException], NoneType], excepted: Union[BaseException, Tuple[BaseException]] = BaseException):
+    """Wraps the call to the function in a try-except statement. if the supplied 'excepted' argument is catched, then calls handler with catched exception."""
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -50,6 +56,7 @@ def handle_exception(handler: Callable[[BaseException], NoneType], excepted: Uni
 
 
 def require_libs(libs: List[type]):
+    """Checks whether supplied libraries are a subclass of LibraryPlaceholder, if they are then calls the __raise_not_implemented__ method of the placeholder, else calls the function and returns its return value."""
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -62,6 +69,11 @@ def require_libs(libs: List[type]):
 
 
 def cached(naive_cache=False, initial_cache=None, fallback_to_initial=False):
+    """
+    Caches function return value.
+    if naive_cache is true, then it caches a result for any given args and kwargs pair.
+    if fallback_to_initial is True then you need to supply an initial_cache value. this would be used as a fallback value for dict.get method.
+    """
     initial_cache_key = '__INITIALIZED_CACHE__'
     if fallback_to_initial and initial_cache is None:
         raise RuntimeError("to use fallback_to_initial, you need to supply initial_cache.")
@@ -80,6 +92,7 @@ def cached(naive_cache=False, initial_cache=None, fallback_to_initial=False):
 
 
 def defaults(value_or_getter: Union[Any, callable] = None, values_for_default: list = [None]):
+    """Calls the function, and if the return value is in supplied 'values_for_default', then return value from value_or_getter, else return the function return value"""
     optional_callable_value = lambda x: x() if callable(x) else x
     def decorator(func):
         @wraps(func)

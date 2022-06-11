@@ -5,10 +5,10 @@ class BaseHelperException(BaseException):
 
 
 class MissingAttribute(BaseHelperException):
-    pass
+    """An attribute is not found in an instance."""
 
 class MissingLib(BaseHelperException):
-    pass
+    """A library is missing."""
 
 class FailedCheck(BaseHelperException, AssertionError):
-    pass
+    """A check has failed."""
