@@ -50,6 +50,7 @@ class API(ReprMixin, PluggableMixin):
 
     def _init(self):
         """Where you can set up the session, login, initialize directories, load cookies, etc. by default, this will set _logged_in value as login method return value."""
+        self[CookiesManager].load_cookies()
         self[DownloadManager].register_defaults()
         self._logged_in = bool(self.login())
     
