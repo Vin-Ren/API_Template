@@ -1,9 +1,10 @@
 from enum import Enum
 
 from base.api.api import API
-from base.api.data_structs import BaseURLCollection, ObjectifiedDict, Credential, Config
+from base.api.data_structs import BaseURLCollection, Credential, Config
 from base.api.parser import RegexParser
 from base.api.data_structs import RegexCollection
+from base.api.data_structs import BaseAPIObject
 
 
 class UrlCollection(BaseURLCollection):
@@ -19,11 +20,8 @@ class UrlCollection(BaseURLCollection):
     get_user = "%s/get_user" % BASE_API
 
 
-class BaseOsuObject(ObjectifiedDict):
-    REQUIRED_FIELDS = []
-    @property
-    def valid(self):
-        return all(map(lambda key:self.__contains__(key), self.REQUIRED_FIELDS))
+class BaseOsuObject(BaseAPIObject):
+    pass
 
 class ApprovedEnum(Enum):
     Loved = 4
@@ -54,7 +52,6 @@ class TestOsuAPI(API):
     PARSER = RegexParser(RegexCollection)
     
     _repr_format = "<%(classname)s LoggedIn=%(_logged_in)s Username=%(username)s>"
-    _repr_used_properties = ['username']
     
     def __init__(self, api_key: str, credentials: Credential, config: Config, initialize=True, **kw):
         super().__init__(credentials, config, initialize=False, **kw)
@@ -74,7 +71,7 @@ class TestOsuAPI(API):
     
     def request_params_preprocessor(self, params):
         params.update({'k': self.api_key})
-        return super().request_params_preprocessor(params)
+        return params
     
     def get_csrf_token(self):
         resp = self.session.get(self.URLS.home)
