@@ -1,7 +1,9 @@
-from functools import wraps
+from functools import wraps, update_wrapper
 
 from types import NoneType
 from typing import Dict, List, Any, Tuple, Union, Callable
+
+from requests import Response
 
 from .exception import MissingAttribute, FailedCheck
 from .placeholder import LibraryPlaceholder
@@ -118,4 +120,36 @@ def defaults(value_or_getter: Union[Any, callable] = None, values_for_default: l
             rv = func(*args, **kwargs)
             return rv if not rv in values_for_default else optional_callable_value(value_or_getter)
         return wrapped
+    return decorator
+
+
+def convert_to(factory_or_class, iterable=False, jsonify=True, ignore_status=False, factorize_all=True):
+    """
+    Use the given factory to process the return value of given function. There are some preprocessor to the return value before being passed into the factory.
+    
+    Params
+    ------
+    iterable: bool
+        Whether the return value of decorated function is iterable to be passed to factory. if true, similiar to map(factory, return_value) else factory(return_value)
+    jsonify: bool
+        Whether to try to convert return value to json or not.
+    ignore_status: bool
+        Whether to proceed jsonification to a response if the status is not OK.
+    factorize_all: bool
+        Whether to factorize all return value, even None-like values such as: None, empty list, empty dict, etc.
+    """
+    def decorator(func):
+        if iterable:
+            def wrapper(*args, **kwargs):
+                rv = func(*args, **kwargs)
+                rv = rv.json() if jsonify and isinstance(rv, Response) and (rv.ok or ignore_status) else rv
+                if rv or factorize_all:
+                    return [factory_or_class(entry) for entry in rv]
+        else:
+            def wrapper(*args, **kwargs):
+                rv = func(*args, **kwargs)
+                rv = rv.json() if jsonify and isinstance(rv, Response) and (rv.ok or ignore_status) else rv
+                if rv or factorize_all:
+                    return factory_or_class(rv)
+        return update_wrapper(wrapper, func)
     return decorator
