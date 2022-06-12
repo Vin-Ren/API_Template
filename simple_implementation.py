@@ -1,10 +1,8 @@
 from enum import Enum
 
 from base.api.api import API
-from base.api.data_structs import BaseURLCollection, Credential, Config
+from base.api.data_structs import BaseURLCollection, Credential, Config, RegexCollection, BaseAPIObject
 from base.api.parser import RegexParser
-from base.api.data_structs import RegexCollection
-from base.api.data_structs import BaseAPIObject
 from base.helper.decorator import convert_to
 
 
@@ -67,7 +65,7 @@ class OsuAPI(API):
         return self.credentials.username
     
     def _init(self):
-        self.session.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36'}
+        self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36'}
         return super()._init()
     
     def request_params_preprocessor(self, params):
@@ -75,13 +73,12 @@ class OsuAPI(API):
         return params
     
     def get_csrf_token(self):
-        resp = self.session.get(self.URLS.home)
+        resp = self.get(self.URLS.home)
         self.recent_method_response['get_csrf_token'] = resp
         if resp.status_code == 200:
-            homepage_content = resp.text
-            result = self.PARSER.parse_one_csrf_token(homepage_content)
+            match_dict = self.PARSER.parse_one_csrf_token(resp.text)
             try:
-                return result.get('csrftoken')
+                return match_dict.get('csrftoken')
             except AttributeError:
                 print("CSRF Token Error: Could not find CSRF token in the page.")
         elif resp.status_code == 429:
