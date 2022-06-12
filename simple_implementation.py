@@ -5,6 +5,7 @@ from base.api.data_structs import BaseURLCollection, Credential, Config
 from base.api.parser import RegexParser
 from base.api.data_structs import RegexCollection
 from base.api.data_structs import BaseAPIObject
+from base.helper.decorator import convert_to
 
 
 class UrlCollection(BaseURLCollection):
@@ -47,7 +48,7 @@ class User(BaseOsuObject):
         return "User#{0[user_id]} {0[username]}".format(self)
 
 
-class TestOsuAPI(API):
+class OsuAPI(API):
     URLS = UrlCollection
     PARSER = RegexParser(RegexCollection)
     
@@ -98,12 +99,10 @@ class TestOsuAPI(API):
                                 {'Data': data, 'Headers': headers, 'Status Code': resp.status_code})
         return resp.ok
     
+    @convert_to(Beatmap, iterable=True)
     def get_beatmaps(self, params: dict):
-        resp = self.get(url=self.URLS.get_beatmaps, params=params)
-        if resp.ok:
-            return [Beatmap(entry) for entry in resp.json()]
+        return self.get(url=self.URLS.get_beatmaps, params=params)
     
+    @convert_to(User, iterable=True)
     def get_users(self, params: dict):
-        resp = self.get(url=self.URLS.get_user, params=params)
-        if resp.ok:
-            return [User(entry) for entry in resp.json()]
+        return self.get(url=self.URLS.get_user, params=params)
