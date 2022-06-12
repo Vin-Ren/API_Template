@@ -47,6 +47,14 @@ class API(ReprMixin, PluggableMixin):
     def cookies(self):
         """Shorthand for api.session.cookies"""
         return self.session.cookies
+    
+    @headers.setter
+    def headers(self, replacer):
+        self.session.headers = replacer
+    
+    @cookies.setter
+    def cookies(self, replacer):
+        self.session.cookies = replacer
 
     def _init(self):
         """Where you can set up the session, login, initialize directories, load cookies, etc. by default, this will set _logged_in value as login method return value."""
