@@ -10,9 +10,15 @@ from .placeholder import LibraryPlaceholder
 def require_attrs(required_attr_names: List[str]):
     """Checks whether the instance has all the required attributes"""
     def decorator(func):
+        
+        if hasattr(func, '__required_attrs'):
+            func.__required_attrs.extend(required_attr_names)
+            return func
+        func.__required_attrs = required_attr_names.copy()
+        
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            for attr in required_attr_names:
+            for attr in func.__required_attrs:
                 if not hasattr(self, attr):
                     raise MissingAttribute("Required attribute '%(attrname)s' is missing from decorated instance. [hasattr(%(instance)s, %(attrname)s) => False]" % dict(instance=str(self), attrname=attr))
             return func(self, *args, **kwargs)
@@ -27,9 +33,15 @@ def check_attrs(__checks: Dict[str, Tuple[callable, BaseException]], *, _ignore_
     """
     __checks.update(kwargs)
     def decorator(func):
+        
+        if hasattr(func, '__attrs_checks'):
+            func.__attrs_checks.update(__checks)
+            return func
+        func.__attrs_checks = __checks.copy()
+        
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            for attr, (check, exception) in __checks.items():
+            for attr, (check, exception) in func.__attrs_checks.items():
                 if hasattr(self, attr):
                     if not check(getattr(self, attr)):
                         raise exception from FailedCheck("Check applied on %(attrname)s failed. [check(%(value)s) => False]" % dict(attrname=attr, value=getattr(self, attr)))
@@ -58,9 +70,15 @@ def handle_exception(handler: Callable[[BaseException], NoneType], excepted: Uni
 def require_libs(libs: List[type]):
     """Checks whether supplied libraries are a subclass of LibraryPlaceholder, if they are then calls the __raise_not_implemented__ method of the placeholder, else calls the function and returns its return value."""
     def decorator(func):
+        
+        if hasattr(func, '__required_libs'):
+            func.__required_libs.update(libs)
+            return func
+        func.__required_libs = libs.copy()
+        
         @wraps(func)
         def wrapper(*args, **kwargs):
-            for lib in libs:
+            for lib in func.__required_libs:
                 if issubclass(lib, LibraryPlaceholder):
                     lib.__raise_not_implemented__()
             return func(*args, **kwargs)
