@@ -28,10 +28,15 @@ def require_attrs(required_attr_names: List[str]):
     return decorator
 
 
-def check_attrs(__checks: Dict[str, Tuple[callable, BaseException]], *, _ignore_missing_attrs=True, **kwargs: Dict[str,Tuple[callable, BaseException]]):
+def check_attrs(__checks: Dict[str, Union[Tuple[callable, BaseException], Any]], *, _ignore_missing_attrs=True, **kwargs: Dict[str, Union[Tuple[callable, BaseException], Any]]):
     """
     Applies all supplied checks to their corresponding target attribute, and if they failed, raise the supplied exception.
-    Checks are passed in as a positional only dictionary or keyword arguments. the structure of these checks => {attribute_name: (check_function, initialized_exception_to_be_raised)}
+    Checks are passed in as a positional only dictionary or keyword arguments.
+    
+    
+    Possible checks structures:
+    - {attribute_name: (check_or_value, exception_instance)} or @check_attrs(attribute_name=(check_or_value, exception_instance))
+    - {attribute_name: check_or_value} or @check_attrs(attribute_name=check_or_value)
     """
     __checks.update(kwargs)
     def decorator(func):
@@ -43,10 +48,19 @@ def check_attrs(__checks: Dict[str, Tuple[callable, BaseException]], *, _ignore_
         
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            for attr, (check, exception) in func.__attrs_checks.items():
+            for attr, check_and_optional_exception in func.__attrs_checks.items():
                 if hasattr(self, attr):
-                    if not check(getattr(self, attr)):
-                        raise exception from FailedCheck("Check applied on %(attrname)s failed. [check(%(value)s) => False]" % dict(attrname=attr, value=getattr(self, attr)))
+                    if isinstance(check, tuple):
+                        check, *_, exception = check_and_optional_exception
+                    else:
+                        check, exception = (check_and_optional_exception, FailedCheck())
+                        
+                    if callable(check):
+                        if not check(getattr(self, attr)):
+                            raise exception from FailedCheck("Check applied on %(attrname)s failed. [check(%(value)s) => False]" % dict(attrname=attr, value=getattr(self, attr)))
+                    else:
+                        if not getattr(self, attr) == check:
+                            raise exception from FailedCheck("Check applied on %(attrname)s failed. [(%(value)s == %(check)s) => False]" % dict(attrname=attr, value=getattr(self, attr)), check=check)
                 else:
                     if _ignore_missing_attrs:
                         continue
