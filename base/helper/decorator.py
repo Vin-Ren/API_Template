@@ -1,4 +1,5 @@
 from functools import wraps, update_wrapper
+import time
 
 from types import FunctionType, NoneType
 from typing import Dict, List, Any, Tuple, Union, Callable
@@ -175,6 +176,23 @@ def cached(naive_cache=False, initial_cache=None, fallback_to_initial=False):
     return decorator
 
 
+def timed_cache(lifespan=60, naive_cache=False):
+    """Like cached, but resets cached response after supplied lifespan in seconds(s). Does not support initial cache."""
+        
+    def decorator(func):
+        """Wraps a function, Caches the return value of wrapped function, to reduce actual call frequency to wrapped function."""
+        func._cached_results = {}
+        @wraps(func)
+        def wrapped(*args, recache=False, **kwargs):
+            key_for_cache = 'cached' if naive_cache else 'args={};kwargs={}'.format(args, kwargs)
+            if not (key_for_cache in func._cached_results and (round(time.time()-func._cached_results[key_for_cache][0]) < lifespan)) or recache:
+                res = func(*args, **kwargs)
+                func._cached_results[key_for_cache] = (time.time(), res)
+            return func._cached_results.get(key_for_cache)[1]
+        return wrapped
+    return decorator
+
+
 def defaults(value_or_getter: Union[Any, callable] = None, values_for_default: list = [None]):
     """Calls the function, and if the return value is in supplied 'values_for_default', then return value from value_or_getter, else return the function return value"""
     optional_callable_value = lambda x: x() if callable(x) else x
@@ -229,4 +247,5 @@ createExceptionHandler = create_exception_handler
 exceptionHandler = exception_handler
 asExceptionHandler = as_exception_handler = exception_handler # To avoid naming collisions
 requireLibs = require_libs
+timedCache = timed_cache
 convertTo = convert_to
