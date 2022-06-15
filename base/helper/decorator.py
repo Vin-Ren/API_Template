@@ -219,3 +219,14 @@ def convert_to(factory_or_class, iterable=False, jsonify=True, ignore_status=Fal
                     return factory_or_class(rv)
         return update_wrapper(wrapper, func)
     return decorator
+
+
+# Aliases Section For Other Naming Styles
+requireAttrs = require_attrs
+checkAttrs = check_attrs
+handleException = handle_exception
+createExceptionHandler = create_exception_handler
+exceptionHandler = exception_handler
+asExceptionHandler = as_exception_handler = exception_handler # To avoid naming collisions
+requireLibs = require_libs
+convertTo = convert_to
