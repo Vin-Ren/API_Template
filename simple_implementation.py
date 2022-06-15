@@ -70,7 +70,7 @@ class OsuAPI(API):
     URLS = UrlCollection
     PARSER = RegexParser(RegexCollection)
     
-    _repr_format = "<%(classname)s LoggedIn=%(_logged_in)s Username=%(username)s>"
+    _repr_format = "<%(classname)s LoggedIn=%(logged_in)s Username=%(username)s>"
     
     def __init__(self, api_key: str, credentials: Credential, config: Config, initialize=True, **kw):
         super().__init__(credentials, config, initialize=False, **kw)
@@ -125,7 +125,7 @@ class OsuAPI(API):
         return self.get(url=self.URLS.get_user, params=params)
     
     @exception_handler
-    @check_attrs(_logged_in=True)
+    @check_attrs(logged_in=True)
     def download_beatmap(self, filename, beatmap, params={}):
         beatmapset_url = self.URLS.formattable_beatmapset.format(beatmap)
         beatmapset_download_url = self.URLS.formattable_beatmapset_download.format(beatmap)

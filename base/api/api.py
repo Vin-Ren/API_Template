@@ -2,6 +2,8 @@ import logging
 
 import requests
 
+from base.helper.decorator import timed_cache
+
 
 from ..data_structs import Credential, Config
 from .data_structs import BaseURLCollection, ResponseContainer
@@ -20,10 +22,17 @@ class API(ReprMixin, PluggableMixin):
     PARSER = Parser
     PRINTER = PrettyPrinter._get_default()
     ALWAYS_CHECK_PREFIXED_BASE_URL = True
+    LOGGED_IN_CACHE_LIFESPAN = 15*60
     
     PLUGINS = [DownloadManager, CookiesManager]
     
-    _repr_format = "<%(classname)s LoggedIn=%(_logged_in)s>" # Format of __repr__
+    _repr_format = "<%(classname)s LoggedIn=%(logged_in)s>" # Format of __repr__
+    
+    def __init_subclass__(cls):
+        if not hasattr(cls.check_logged_in, '_cache_lifespan'):
+            cls.check_logged_in = timed_cache(cls.LOGGED_IN_CACHE_LIFESPAN)(cls.check_logged_in)
+        cls.check_logged_in._cache_lifespan = cls.LOGGED_IN_CACHE_LIFESPAN
+        return super().__init_subclass__()
     
     def __init__(self, credentials: Credential, config: Config, initialize=True, **kw):
         self.credentials = credentials
@@ -65,6 +74,15 @@ class API(ReprMixin, PluggableMixin):
     def login(self):
         """Where you can do your login process. By default returns True. Should only return booleans which represents the result of the login action."""
         return True
+
+    @timed_cache(LOGGED_IN_CACHE_LIFESPAN)
+    def check_logged_in(self):
+        """Should be overriden with logic to check whether the user is logged in or not. This method would automatically be decorated with timed_cache decorator and with lifespan as the class' LOGGED_IN_CACHE_LIFESPAN attribute."""
+        return self._logged_in
+
+    @property
+    def logged_in(self):
+        return self.check_logged_in()
 
     def request_params_preprocessor(self, params):
         """Modify request params before request. Could be useful if you need to add stuff like apiKey. This is applied to all requests passed through _request and request method."""
