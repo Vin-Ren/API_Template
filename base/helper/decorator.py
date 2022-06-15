@@ -12,7 +12,7 @@ from .placeholder import LibraryPlaceholder
 def require_attrs(required_attr_names: List[str]):
     """Checks whether the instance has all the required attributes"""
     def decorator(func):
-        
+        """Wraps a function, performs a check to make sure all required attributes are present in the instance."""
         if hasattr(func, '__required_attrs'):
             func.__required_attrs.extend(required_attr_names)
             return func
@@ -40,7 +40,7 @@ def check_attrs(__checks: Dict[str, Union[Tuple[callable, BaseException], Any]],
     """
     __checks.update(kwargs)
     def decorator(func):
-        
+        """Wraps a function, performs a check to make sure all required (or available) attributes complies with their checks or values, if they are not, raise their corresponding exception if given."""
         if hasattr(func, '__attrs_checks'):
             func.__attrs_checks.update(__checks)
             return func
@@ -73,6 +73,7 @@ def check_attrs(__checks: Dict[str, Union[Tuple[callable, BaseException], Any]],
 def handle_exception(handler: Callable[[BaseException], NoneType], excepted: Union[BaseException, Tuple[BaseException]] = BaseException):
     """Wraps the call to the function in a try-except statement. if the supplied 'excepted' argument is catched, then calls handler with catched exception."""
     def decorator(func):
+        """Wraps a function and catch exceptions, which if known, will be passed to given handler."""
         @wraps(func)
         def wrapper(*args, **kwargs):
             try:
@@ -83,10 +84,15 @@ def handle_exception(handler: Callable[[BaseException], NoneType], excepted: Uni
     return decorator
 
 
+def create_exception_handler(handler: Callable[[BaseException], NoneType], excepted: Union[BaseException, Tuple[BaseException]] = BaseException):
+    """Wraps handle_exception, returns the decorator created from handle_exception. Useful for repetitive use of handle_exception decorator."""
+    return handle_exception(handler, excepted)
+
+
 def require_libs(libs: List[type]):
     """Checks whether supplied libraries are a subclass of LibraryPlaceholder, if they are then calls the __raise_not_implemented__ method of the placeholder, else calls the function and returns its return value."""
     def decorator(func):
-        
+        """Wraps a function, Performs a check to make sure all required libraries are not dummy libraries, else raises NotInstalled exception."""
         if hasattr(func, '__required_libs'):
             func.__required_libs.update(libs)
             return func
@@ -113,6 +119,7 @@ def cached(naive_cache=False, initial_cache=None, fallback_to_initial=False):
         raise RuntimeError("to use fallback_to_initial, you need to supply initial_cache.")
         
     def decorator(func):
+        """Wraps a function, Caches the return value of wrapped function, to reduce actual call frequency to wrapped function."""
         func._cached_results = {} if initial_cache is None else {('cached' if naive_cache else initial_cache_key):initial_cache}
         @wraps(func)
         def wrapped(*args, recache=False, **kwargs):
@@ -129,6 +136,7 @@ def defaults(value_or_getter: Union[Any, callable] = None, values_for_default: l
     """Calls the function, and if the return value is in supplied 'values_for_default', then return value from value_or_getter, else return the function return value"""
     optional_callable_value = lambda x: x() if callable(x) else x
     def decorator(func):
+        """Wraps a function, evaluates the return value of function, if in values_for_default, then gets value from value_or_getter."""
         @wraps(func)
         def wrapped(*args, **kwargs):
             rv = func(*args, **kwargs)
@@ -153,6 +161,7 @@ def convert_to(factory_or_class, iterable=False, jsonify=True, ignore_status=Fal
         Whether to factorize all return value, even None-like values such as: None, empty list, empty dict, etc.
     """
     def decorator(func):
+        """Wraps a function, converts the return value of wrapped function with the factory_or_class and the other options supplied."""
         if iterable:
             def wrapper(*args, **kwargs):
                 rv = func(*args, **kwargs)
