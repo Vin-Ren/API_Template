@@ -136,6 +136,6 @@ class OsuAPI(API):
         
         self.PRINTER.print_debug('Download Process', 
                                 {'Beatmap Info':beatmap, 'Download Url':beatmapset_download_url, 
-                                 'Beatmapset Url': beatmapset_url, 'Target File Stream': repr(progress_info.stream), 
+                                 'Beatmapset Url': beatmapset_url, 'Target File Stream': repr(progress_info.pipe_handler), 
                                  'Params': params, 'Status Code': progress_info.stream.status_code})
         return bool(progress_info)
