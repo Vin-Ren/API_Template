@@ -181,11 +181,12 @@ def timed_cache(lifespan=60, naive_cache=False):
         
     def decorator(func):
         """Wraps a function, Caches the return value of wrapped function, to reduce actual call frequency to wrapped function."""
+        func._cache_lifespan = lifespan
         func._cached_results = {}
         @wraps(func)
         def wrapped(*args, recache=False, **kwargs):
             key_for_cache = 'cached' if naive_cache else 'args={};kwargs={}'.format(args, kwargs)
-            if not (key_for_cache in func._cached_results and (round(time.time()-func._cached_results[key_for_cache][0]) < lifespan)) or recache:
+            if not (key_for_cache in func._cached_results and (round(time.time()-func._cached_results[key_for_cache][0]) < func._cache_lifespan)) or recache:
                 res = func(*args, **kwargs)
                 func._cached_results[key_for_cache] = (time.time(), res)
             return func._cached_results.get(key_for_cache)[1]
