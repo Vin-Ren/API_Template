@@ -3,7 +3,7 @@ import os
 
 from .base import BasePlugin
 from ..data_structs import ProgressInfo, Timer
-from ..helper.snippets import metric_size_formatter, make_progress_bar
+from ..helper.snippets import metric_size_formatter, make_progress_bar, dict_updater
 
 
 class DownloadFileHandler:
@@ -58,6 +58,8 @@ class DownloadManager(BasePlugin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
+        self.session_kwargs = {'stream':True}
+        
         self.predownload_hooks = []
         self.progress_hooks = []
         self.finished_hooks = []
@@ -92,10 +94,13 @@ class DownloadManager(BasePlugin):
     def default_finished_hook(self, progress: ProgressInfo):
         print("Downloaded file in %ds" % round(progress.time_info.duration, 2))
     
-    def download_to_file(self, filename, *session_args, retry_download=True, **session_kwargs):
+    def download_to_file(self, filename, *session_args, retry_download=True, progress_info_updater=None, **session_kwargs):
         timer = Timer().start()
+        session_kwargs = dict_updater(self.session_kwargs, session_kwargs)
+        
         with self.session.get(*session_args, **session_kwargs) as stream, DownloadFileHandler(filename) as file_handler:
             prog_info = ProgressInfo(stream=stream, pipe_handler=file_handler, time_info=timer)
+            prog_info.update(progress_info_updater) if progress_info_updater is not None else None
             [hook(prog_info) for hook in self.predownload_hooks]
             for chunk in stream.iter_content(self.DOWNLOAD_CHUNK_SIZE):
                 if not chunk:
@@ -108,6 +113,6 @@ class DownloadManager(BasePlugin):
         [hook(prog_info) for hook in self.finished_hooks]
         
         if stream.ok:
-            return True
+            return prog_info
         if retry_download:
             return self.download_to_file(filename, *session_args, retry_download=retry_download, **session_kwargs)
