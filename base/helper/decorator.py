@@ -1,6 +1,6 @@
 from functools import wraps, update_wrapper
 
-from types import NoneType
+from types import FunctionType, NoneType
 from typing import Dict, List, Any, Tuple, Union, Callable
 
 from requests import Response
@@ -87,6 +87,49 @@ def handle_exception(handler: Callable[[BaseException], NoneType], excepted: Uni
 def create_exception_handler(handler: Callable[[BaseException], NoneType], excepted: Union[BaseException, Tuple[BaseException]] = BaseException):
     """Wraps handle_exception, returns the decorator created from handle_exception. Useful for repetitive use of handle_exception decorator."""
     return handle_exception(handler, excepted)
+
+
+def exception_handler(excepted = BaseException, *extra_excepted):
+    """
+    Wraps create_exception_handler function, decorate a handler function with this to convert it to a decorator.
+    
+    
+    Can be used in two ways:
+    
+    Without arguments:
+    >>> @exception_handler
+    ... def handler(exception):
+    ...     pass
+    
+    With arguments:
+    >>> @exception_handler(ExceptionName [, OtherPossibleException, ...])
+    ... def handler(exception):
+    ...    pass
+    """
+    if isinstance(excepted, FunctionType):
+        """
+        If used like:
+        @exception_handler
+        def handler(exception):
+            pass
+        """
+        return create_exception_handler(excepted,BaseException)
+    else:
+        """
+        If used like:
+        @exception_handler(ExceptionName, OtherPossibleException)
+        def handler(exception):
+            pass
+        """
+        if isinstance(excepted, (Tuple, List)):
+            excepted = excepted + extra_excepted
+        else:
+            excepted = [excepted] + extra_excepted
+        
+        def decorator(func):
+            """Decorator when exception_handler is used with arguments."""
+            return create_exception_handler(func, excepted)
+        return decorator
 
 
 def require_libs(libs: List[type]):
