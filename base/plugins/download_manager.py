@@ -1,15 +1,16 @@
 import os
 
-
 from .base import BasePlugin
 from ..data_structs import ProgressInfo, Timer
+from ..helper.class_mixin import ReprMixin
 from ..helper.snippets import metric_size_formatter, make_progress_bar, dict_updater
 
 
-class DownloadFileHandler:
+class DownloadFileHandler(ReprMixin):
     TEMPORARY_DIR = 'temp'
     TEMPORARY_EXTENSION = 'tmp'
     CHUNK_SIZE = 512
+    _repr_format = "<%(classname)s name=%(filename)s temporary_filename=%(temporary_filename)s>" # Format of __repr__
     
     def __getattribute__(self, name: str):
         try:
@@ -54,6 +55,8 @@ class DownloadFileHandler:
 
 class DownloadManager(BasePlugin):
     DOWNLOAD_CHUNK_SIZE = 512
+    
+    _repr_format = "<%(classname)s DOWNLOAD_CHUNK_SIZE=%(DOWNLOAD_CHUNK_SIZE)s session_kwargs=%(session_kwargs)s>" # Format of __repr__
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

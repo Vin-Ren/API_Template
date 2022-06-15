@@ -20,6 +20,8 @@ class CookiesCachingMethod(Enum):
 
 class CookiesManager(BasePlugin):
     DEFAULT_COOKIES_CACHING_METHOD = CookiesCachingMethod.JSON
+    _repr_format = "<%(classname)s DEFAULT_COOKIES_CACHING_METHOD=%(DEFAULT_COOKIES_CACHING_METHOD)s>" # Format of __repr__
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     

@@ -3,9 +3,10 @@ from typing import Union, List, Dict
 
 from ..data_structs import ObjectifiedDict
 from ..api.api import API
+from ..helper.class_mixin import ReprMixin
 
 
-class _BasePlugin:
+class _BasePlugin(ReprMixin):
     ENABLE_GETITEM_VARIABLE_ACCESS = False
     
     def __getattribute__(self, name):
