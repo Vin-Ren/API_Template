@@ -3,7 +3,8 @@ from enum import Enum
 from base.api.api import API
 from base.api.data_structs import BaseURLCollection, Credential, Config, RegexCollection, BaseAPIObject
 from base.api.parser import RegexParser
-from base.helper.decorator import convert_to
+from base.helper.decorator import convert_to, check_attrs, exception_handler
+from base.plugins.download_manager import DownloadManager
 
 
 class UrlCollection(BaseURLCollection):
@@ -19,9 +20,6 @@ class UrlCollection(BaseURLCollection):
     get_user = "%s/get_user" % BASE_API
 
 
-class BaseOsuObject(BaseAPIObject):
-    pass
-
 class ApprovedEnum(Enum):
     Loved = 4
     Qualified = 3
@@ -31,6 +29,11 @@ class ApprovedEnum(Enum):
     WIP = -1
     Graveyard = -2
 
+
+class BaseOsuObject(BaseAPIObject):
+    pass
+
+
 class Beatmap(BaseOsuObject):
     REQUIRED_FIELDS = ['beatmap_id', 'beatmapset_id', 'approved', 'title', 'version']
     def __repr__(self):
@@ -38,12 +41,29 @@ class Beatmap(BaseOsuObject):
     def __str__(self):
         return "{0[beatmapset_id]} {0[artist]} - {0[title]} ({0[version]})".format(self)
 
+
 class User(BaseOsuObject):
     REQUIRED_FIELDS = ['user_id', 'username', 'join_date', 'level', 'pp_raw']
     def __repr__(self):
         return "<{} object id={} username={} level={} pp={}>".format(self.__class__.__name__, self.user_id, self.username, round(float(self.level)), round(float(self.pp_raw)))
     def __str__(self):
         return "User#{0[user_id]} {0[username]}".format(self)
+
+
+class BaseOsuException(BaseException):
+    pass
+
+
+class NotLoggedIn(BaseOsuException, RuntimeError):
+    pass
+
+
+@exception_handler # Naming conflict if referenced again, but will you?
+def exception_handler(exception):
+    if isinstance(exception, NotLoggedIn):
+        print("This functionality requires you to be logged in.")
+    else:
+        raise exception
 
 
 class OsuAPI(API):
@@ -103,3 +123,19 @@ class OsuAPI(API):
     @convert_to(User, iterable=True)
     def get_users(self, params: dict):
         return self.get(url=self.URLS.get_user, params=params)
+    
+    @exception_handler
+    @check_attrs(_logged_in=True)
+    def download_beatmap(self, filename, beatmap, params={}):
+        beatmapset_url = self.URLS.formattable_beatmapset.format(beatmap)
+        beatmapset_download_url = self.URLS.formattable_beatmapset_download.format(beatmap)
+        headers = {'referer': beatmapset_url}
+        
+        downloader: DownloadManager = self[DownloadManager] # Only for type hinting
+        progress_info = downloader.download_to_file(filename, url=beatmapset_download_url, params=params, headers=headers, allow_redirects=True)
+        
+        self.PRINTER.print_debug('Download Process', 
+                                {'Beatmap Info':beatmap, 'Download Url':beatmapset_download_url, 
+                                 'Beatmapset Url': beatmapset_url, 'Target File Stream': repr(progress_info.stream), 
+                                 'Params': params, 'Status Code': progress_info.stream.status_code})
+        return bool(progress_info)
