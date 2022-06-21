@@ -8,7 +8,7 @@ from ...helper.class_mixin import ReprMixin
 
 class ModelMeta(type):
     def __repr__(cls) -> str:
-        return "<%s Model>" % cls.__name__
+        return "<%s Model with %s Fields>" % (cls.__name__, len(cls.__FIELDS__))
     
     def __new__(cls, clsname, bases, attrs, **kw):
         new_attrs = {}
@@ -37,8 +37,6 @@ class ModelMeta(type):
             fields = attrs.get('__FIELDS__')
             if isinstance(fields, list):
                 fields = {field.name:field for field in fields}
-            
-            fields = attrs.get('__FIELDS__')
         
         new_attrs.update({'__FIELDS__':fields, **fields})
         
@@ -46,7 +44,7 @@ class ModelMeta(type):
 
 
 class Model(ReprMixin, metaclass=ModelMeta):
-    _repr_format = "<%(classname)s Model with %(len(cls.__FIELDS__))s Fields>"
+    _repr_format = "<%(classname)s Model instance with %(len(cls.__FIELDS__))s Fields>"
     
     def __getitem__(self, name):
         return self.__dict__.__getitem__(name)
