@@ -1,6 +1,7 @@
 import re
 
 from ..data_structs import *
+from ..database.models import Model
 
 
 class BaseURLCollection:
@@ -22,7 +23,9 @@ class ResponseContainer(list):
         return self[-1] if len(self) >= 1 else None
 
 
-class BaseAPIObject(ObjectifiedDict):
+class BaseAPIObject(ObjectifiedDict, Model):
+    """
+    A Base to inherit from for API Objects. Inherits from both ObjectifiedDict and Model."""
     REQUIRED_FIELDS = []
     @property
     def valid(self):
