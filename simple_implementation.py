@@ -7,7 +7,9 @@ from base.api.data_structs import BaseURLCollection, Credential, Config, RegexCo
 from base.api.parser import RegexParser
 from base.database.models.field import Field
 from base.helper.decorator import convert_to, check_attrs, exception_handler
+from base.plugins.cookies_manager import CookiesManager
 from base.plugins.download_manager import DownloadManager
+from base.database.manager import MultiThreadedSQLiteDB
 
 
 class UrlCollection(BaseURLCollection):
@@ -38,6 +40,7 @@ class BaseOsuObject(BaseAPIObject):
 
 
 class Beatmap(BaseOsuObject):
+    __TABLE_NAME__ = 'beatmaps'
     REQUIRED_FIELDS = ['beatmap_id', 'beatmapset_id', 'approved', 'title', 'version']
     # First type of implementation for Model
     beatmap_id = Field(int, primary_key=True, not_null=True, unique=True)
@@ -55,6 +58,7 @@ class Beatmap(BaseOsuObject):
 
 
 class User(BaseOsuObject):
+    __TABLE_NAME__ = 'users'
     REQUIRED_FIELDS = ['user_id', 'username', 'join_date', 'level', 'pp_raw']
     # Second type of implementation for Model
     __FIELDS__ = [
@@ -70,6 +74,10 @@ class User(BaseOsuObject):
         return "<{} object id={} username={} level={} pp={}>".format(self.__class__.__name__, self.user_id, self.username, round(float(self.level)), round(float(self.pp_raw)))
     def __str__(self):
         return "User#{0[user_id]} {0[username]}".format(self)
+
+
+class OsuDB(MultiThreadedSQLiteDB):
+    TABLES = [Beatmap, User]
 
 
 class BaseOsuException(BaseException):
@@ -92,11 +100,14 @@ class OsuAPI(API):
     URLS = UrlCollection
     PARSER = RegexParser(RegexCollection)
     
+    PLUGINS = [DownloadManager, CookiesManager]
+    
     _repr_format = "<%(classname)s LoggedIn=%(logged_in)s Username=%(username)s>"
     
     def __init__(self, api_key: str, credentials: Credential, config: Config, initialize=True, **kw):
         super().__init__(credentials, config, initialize=False, **kw)
         self.api_key = api_key
+        self.db = OsuDB(config.database)
         self.recent_method_response = dict.fromkeys(['request', 'get_csrf_token', 'login'])
         
         if initialize:
@@ -139,12 +150,18 @@ class OsuAPI(API):
         return resp.ok
     
     @convert_to(Beatmap, iterable=True)
-    def get_beatmaps(self, params: dict):
+    def get_beatmaps(self, params: dict = {}):
         return self.get(url=self.URLS.get_beatmaps, params=params)
     
     @convert_to(User, iterable=True)
-    def get_users(self, params: dict):
+    def get_users(self, params: dict = {}):
         return self.get(url=self.URLS.get_user, params=params)
+    
+    def import_beatmaps_to_db(self, params: dict = {}):
+        return self.db.insert_many(self.get_beatmaps(params=params))
+    
+    def import_users_to_db(self, params: dict = {}):
+        return self.db.insert_many(self.get_users(params=params))
     
     @exception_handler
     @check_attrs(logged_in=True)
@@ -161,3 +178,14 @@ class OsuAPI(API):
                                  'Beatmapset Url': beatmapset_url, 'Target File Stream': repr(progress_info.pipe_handler), 
                                  'Params': params, 'Status Code': progress_info.stream.status_code})
         return bool(progress_info)
+
+
+def get_api():
+    api_key = input('API KEY:')
+    credentials = Credential(username=input('USERNAME:'), password=input('PASSWORD'))
+    basic_config = Config(database='db.sqlite3')
+    return OsuAPI(api_key, credentials, basic_config)
+
+
+if __name__ == '__main__':
+    pass
