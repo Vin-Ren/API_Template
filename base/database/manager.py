@@ -81,6 +81,9 @@ class SQLiteDB(BaseManager):
     def _select(self, select_query):
         self.cursor.execute(select_query)
         return self.cursor.fetchall()
+    
+    def select(self, select_query):
+        return self._select(select_query)
 
 
 class MultiThreadedSQLiteDB(SQLiteDB):
