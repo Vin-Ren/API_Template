@@ -229,7 +229,6 @@ def convert_to(factory_or_class, iterable=False, jsonify=True, ignore_status=Fal
                 rv = func(*args, **kwargs)
                 rv = rv.json() if jsonify and isinstance(rv, Response) and (rv.ok or ignore_status) else rv
                 if rv or factorize_all:
-                    print(rv)
                     return [factory_or_class(entry) for entry in rv]
         else:
             def wrapper(*args, **kwargs):
