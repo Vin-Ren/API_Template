@@ -1,8 +1,11 @@
 from enum import Enum
 
+from datetime import datetime
+
 from base.api.api import API
 from base.api.data_structs import BaseURLCollection, Credential, Config, RegexCollection, BaseAPIObject
 from base.api.parser import RegexParser
+from base.database.models.field import Field
 from base.helper.decorator import convert_to, check_attrs, exception_handler
 from base.plugins.download_manager import DownloadManager
 
@@ -36,7 +39,16 @@ class BaseOsuObject(BaseAPIObject):
 
 class Beatmap(BaseOsuObject):
     REQUIRED_FIELDS = ['beatmap_id', 'beatmapset_id', 'approved', 'title', 'version']
+    # First type of implementation for Model
+    beatmap_id = Field(int, primary_key=True, not_null=True, unique=True)
+    beatmapset_id = Field(int, not_null=True)
+    approved = Field(int, not_null=True)
+    title = Field(str, not_null=True)
+    version = Field(str, not_null=True)
+    
     def __repr__(self):
+        if not self.valid:
+            return "<Invalid {} object>".format(self.__class__.__name__)
         return "<{} object id={} beatmapset_id={} approved={} version={}>".format(self.__class__.__name__, self.beatmap_id, self.beatmapset_id, ApprovedEnum(int(self.approved)).name, self.version)
     def __str__(self):
         return "{0[beatmapset_id]} {0[artist]} - {0[title]} ({0[version]})".format(self)
@@ -44,7 +56,17 @@ class Beatmap(BaseOsuObject):
 
 class User(BaseOsuObject):
     REQUIRED_FIELDS = ['user_id', 'username', 'join_date', 'level', 'pp_raw']
+    # Second type of implementation for Model
+    __FIELDS__ = [
+        Field(int, 'user_id', primary_key=True, not_null=True, unique=True), 
+        Field(str, 'username', not_null=True, unique=True),
+        Field(datetime, 'join_date', not_null=True),
+        Field(float, 'level', not_null=True),
+        Field(float, 'pp_raw', not_null=True)]
+
     def __repr__(self):
+        if not self.valid:
+            return "<Invalid {} object>".format(self.__class__.__name__)
         return "<{} object id={} username={} level={} pp={}>".format(self.__class__.__name__, self.user_id, self.username, round(float(self.level)), round(float(self.pp_raw)))
     def __str__(self):
         return "User#{0[user_id]} {0[username]}".format(self)

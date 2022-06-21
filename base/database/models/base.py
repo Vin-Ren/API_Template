@@ -7,7 +7,7 @@ from ...helper.class_mixin import ReprMixin
 
 
 class ModelMeta(type):
-    def __repr__(cls) -> str:
+    def __repr__(cls):
         return "<%s Model with %s Fields>" % (cls.__name__, len(cls.__FIELDS__))
     
     def __new__(cls, clsname, bases, attrs, **kw):
