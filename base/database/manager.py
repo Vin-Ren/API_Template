@@ -55,7 +55,7 @@ class SQLiteDB(BaseManager):
     
     def create_table(self, model: Union[ModelMeta, Model]):
         self.cursor.execute(model.make_create_query())
-        self.connection.commit()
+        self.commit()
     
     def create_model(self, model):
         """Alias for craete_table"""
@@ -63,7 +63,7 @@ class SQLiteDB(BaseManager):
     
     def insert(self, obj: Model, **insertKwargs):
         self.cursor.execute(*obj.make_insert_args(**insertKwargs))
-        self.connection.commit()
+        self.commit()
     
     def insert_many(self, obj_list: List[Model], **insertKwargs):
         """Uses executemany and can insert many objects of different models."""
@@ -76,7 +76,11 @@ class SQLiteDB(BaseManager):
 
         for query_string, execute_many_values in query_groups.items():
             self.cursor.executemany(query_string, execute_many_values)
-            self.connection.commit() # Commit for every model group.
+            self.commit() # Commit for every model group.
+    
+    def _select(self, select_query):
+        self.cursor.execute(select_query)
+        return self.cursor.fetchall()
 
 
 class MultiThreadedSQLiteDB(SQLiteDB):
@@ -84,3 +88,9 @@ class MultiThreadedSQLiteDB(SQLiteDB):
         super().__init__(*args, **kwargs)
         self._cursor = self.cursor
         self.cursor: CursorProxy = CursorProxy(self.database, self._cursor)
+        self._commit = self.commit
+        self.commit = self.cursor.commit_proxy
+    
+    def _select(self, select_query):
+        self._cursor.execute(select_query)
+        return self._cursor.fetchall()

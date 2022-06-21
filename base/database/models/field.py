@@ -10,16 +10,16 @@ from .datatypes import *
 class BaseConverter:
     OPTS = {'not_null': 'NOT NULL', 'primary_key':'PRIMARY KEY', 'auto_increment':'AUTO INCREMENT', 'unique':'UNIQUE'}
     TYPE = {int:'INTEGER', str:'TEXT', blob:'BLOB', float:'REAL', datetime:'TEXT', bool:'INTEGER', NoneType:'NULL'}
-    VALUE = {int: int, str: lambda _s: '"{}"'.format(_s), float:float, 
-            datetime: lambda dt:'"{}"'.format(dt.isoformat()), 
+    VALUE = {int: int, str: lambda _s: _s, float:float, 
+            datetime: lambda dt:dt.isoformat(), 
             bool: lambda _bool:1 if _bool else 0, -1: str}
 
 
 class SQLiteConverter(BaseConverter):
     OPTS = {'not_null': 'NOT NULL', 'primary_key':'PRIMARY KEY', 'auto_increment':'AUTO INCREMENT', 'unique':'UNIQUE'}
     TYPE = {int:'INTEGER', str:'TEXT', blob:'BLOB', float:'REAL', datetime:'TEXT', bool:'INTEGER', NoneType:'NULL'}
-    VALUE = {int: int, str: lambda _s: '"{}"'.format(_s), float:float, 
-            datetime: lambda dt:'"{}"'.format(dt.isoformat()), 
+    VALUE = {int: int, str: lambda _s: '{}'.format(_s), float:float, 
+            datetime: lambda dt:'{}'.format(dt.isoformat()), 
             bool: lambda _bool:1 if _bool else 0, -1: str}
 
 

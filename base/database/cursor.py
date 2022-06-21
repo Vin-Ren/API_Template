@@ -3,7 +3,7 @@ from queue import Queue
 import sqlite3
 from threading import Thread
 
-from typing import Dict, Tuple
+from typing import Any, Dict, Tuple
 
 
 CursorTask = namedtuple('CursorTask', ['target_method', 'args', 'kwargs'])
@@ -19,6 +19,8 @@ class CursorProxy:
         self.proxy_cursor: sqlite3.Cursor = None
         self.daemon: Thread = Thread(target=self.process_queued_tasks, name='CursorProxy Daemon Thread', daemon=True)
         self.queue: Queue = Queue()
+        
+        self._proxy_map = {}
         
         if cursor is not None:
             self.connection = self.cursor.connection
@@ -50,11 +52,15 @@ class CursorProxy:
             self.proxy_cursor = self.proxy_connection.cursor()
             while True:
                 task: CursorTask = self.queue.get(True)
-                self.proxy_cursor.__getattribute__(task.target_method)(*task.args, **task.kwargs)
+                method = self.proxy_cursor
+                for accessor in task.target_method.split('.'):
+                    method = method.__getattribute__(accessor)
+                method(*task.args, **task.kwargs)
+                print(method)
         finally:
             self.proxy_cursor.close()
     
-    def enqueue_task(self, method_name: str, args: Tuple, kwargs: Dict):
+    def enqueue_task(self, method_name: str, args: Tuple, kwargs: Dict, return_value: bool = False):
         return self.queue.put(CursorTask(method_name, args, kwargs))
     
     def make_proxy(self, method_name: str):
@@ -68,3 +74,6 @@ class CursorProxy:
         if immediate:
             return self.cursor.__getattribute__(method_name)(*args, **kwargs)
         return self.enqueue_task(method_name, args=args, kwargs=kwargs)
+
+    def commit_proxy(self):
+        return self.proxy('connection.commit')
