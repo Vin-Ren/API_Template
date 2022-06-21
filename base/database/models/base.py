@@ -20,11 +20,9 @@ class ModelMeta(type):
             [fields.update(_cls.__FIELDS__) for _cls in bases if isinstance(_cls, ModelMeta)]
         
         for name, value in attrs.items():
-            if name.startswith('_') or isinstance(value, (FunctionType, property, classmethod)) or callable(value):
+            if not isinstance(value, Field):
                 new_attrs[name] = value
                 continue
-            if not isinstance(value, Field):
-                raise RuntimeError("The field {} is not of type Field".format(name))
             fields[name] = Field(value.type, value.name if value.name is not None else name, default=value.default, foreign_key=value.foreign_key, **value.opts)
         
         if attrs.get('__TABLE_NAME__') is not None:
