@@ -167,7 +167,7 @@ def cached(naive_cache=False, initial_cache=None, fallback_to_initial=False):
         func._cached_results = {} if initial_cache is None else {('cached' if naive_cache else initial_cache_key):initial_cache}
         @wraps(func)
         def wrapped(*args, recache=False, **kwargs):
-            key_for_cache = 'cached' if naive_cache else 'args={};kwargs={}'.format(args, kwargs)
+            key_for_cache = 'cached' if naive_cache else 'args={};kwargs={}'.format(tuple(id(e) for e in args), kwargs)
             if not (key_for_cache in func._cached_results) and not (fallback_to_initial and initial_cache_key in func._cached_results) or recache:
                 res = func(*args, **kwargs)
                 func._cached_results[key_for_cache] = res
@@ -185,7 +185,7 @@ def timed_cache(lifespan=60, naive_cache=False):
         func._cached_results = {}
         @wraps(func)
         def wrapped(*args, recache=False, **kwargs):
-            key_for_cache = 'cached' if naive_cache else 'args={};kwargs={}'.format(args, kwargs)
+            key_for_cache = 'cached' if naive_cache else 'args={};kwargs={}'.format(tuple(id(e) for e in args), kwargs)
             if not (key_for_cache in func._cached_results and (round(time.time()-func._cached_results[key_for_cache][0]) < func._cache_lifespan)) or recache:
                 res = func(*args, **kwargs)
                 func._cached_results[key_for_cache] = (time.time(), res)
@@ -207,7 +207,7 @@ def defaults(value_or_getter: Union[Any, callable] = None, values_for_default: l
     return decorator
 
 
-def convert_to(factory_or_class, iterable=False, jsonify=True, ignore_status=False, factorize_all=True):
+def convert_to(factory_or_class, iterable=False, jsonify=True, ignore_status=False, factorize_all=False):
     """
     Use the given factory to process the return value of given function. There are some preprocessor to the return value before being passed into the factory.
     
@@ -229,6 +229,7 @@ def convert_to(factory_or_class, iterable=False, jsonify=True, ignore_status=Fal
                 rv = func(*args, **kwargs)
                 rv = rv.json() if jsonify and isinstance(rv, Response) and (rv.ok or ignore_status) else rv
                 if rv or factorize_all:
+                    print(rv)
                     return [factory_or_class(entry) for entry in rv]
         else:
             def wrapper(*args, **kwargs):
