@@ -2,7 +2,6 @@
 from typing import Union, List, Dict
 
 from ..data_structs import ObjectifiedDict
-from ..api.api import API
 from ..helper.class_mixin import ReprMixin
 
 
@@ -21,7 +20,7 @@ class _BasePlugin(ReprMixin):
         else:
             return super().__getitem__(name)
     
-    def __init__(self, api: API):
+    def __init__(self, api):
         self.api = api
 
 class BasePlugin(_BasePlugin):

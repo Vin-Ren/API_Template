@@ -3,7 +3,6 @@ from types import NoneType
 from typing import Callable
 
 from ..data_structs import ReprCustomMapping
-from ..plugins.base import PluggableMixin
 
 
 class ReprMixin:
@@ -20,3 +19,5 @@ class LogGetattrMixin:
         cls = super().__getattribute__('__class__')
         cls.LOGGER_FUNCTION("%(classname)s.__getattribute__(%(repr)s,'%(name)s') -> %(value)s" % dict(classname=cls.__name__, repr=super().__getattribute__('__repr__')(), name=name, value=value))
         return value
+
+from ..plugins.base import PluggableMixin

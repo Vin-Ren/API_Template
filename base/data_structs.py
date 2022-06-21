@@ -62,7 +62,6 @@ class Timer:
 
 
 class ProgressInfo(ObjectifiedDict):
-    __slots__ = ['stream', 'pipe_handler', 'time_info', '__dict__']
     def __init__(self, *, stream: requests.Response, pipe_handler: io.IOBase, time_info: Timer):
         super().__init__(stream=stream, pipe_handler=pipe_handler, time_info=time_info)
         self.stream: requests.Response

@@ -29,7 +29,7 @@ def require_attrs(required_attr_names: List[str]):
     return decorator
 
 
-def check_attrs(__checks: Dict[str, Union[Tuple[callable, BaseException], Any]], *, _ignore_missing_attrs=True, **kwargs: Dict[str, Union[Tuple[callable, BaseException], Any]]):
+def check_attrs(__checks: Dict[str, Union[Tuple[callable, BaseException], Any]]={}, *, _ignore_missing_attrs=True, **kwargs: Dict[str, Union[Tuple[callable, BaseException], Any]]):
     """
     Applies all supplied checks to their corresponding target attribute, and if they failed, raise the supplied exception.
     Checks are passed in as a positional only dictionary or keyword arguments.
