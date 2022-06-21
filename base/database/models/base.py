@@ -7,6 +7,9 @@ from ...helper.class_mixin import ReprMixin
 
 
 class ModelMeta(type):
+    def __repr__(cls) -> str:
+        return "<%s Model>" % cls.__name__
+    
     def __new__(cls, clsname, bases, attrs, **kw):
         new_attrs = {}
         fields = {}
@@ -69,7 +72,7 @@ class Model(ReprMixin, metaclass=ModelMeta):
         fields_queries = [field.generate_field_query() for field in cls.__FIELDS__.values()]
         field_queries = ", ".join([field_query[0] for field_query in fields_queries])
         modifier_queries = ", ".join([field_query[1] for field_query in fields_queries if len(field_query[1].strip())])
-        queries = " ".join([field_queries, modifier_queries])
+        queries = " ".join([field_queries, modifier_queries]).strip()
         return _s.format(table_name=cls.table_name, queries=queries)
     
     @classmethod
