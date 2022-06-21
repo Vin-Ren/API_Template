@@ -85,7 +85,7 @@ class Model(ReprMixin, metaclass=ModelMeta):
         entry_data = {}
         for name_in_obj, field in self.__FIELDS__.items():
             try:
-                entry_data[field.name] = self[name_in_obj]
+                entry_data[field.name] = field.convert_value(self[name_in_obj])
             except KeyError:
                 if not field.settings['NOT NULL']:
                     entry_data[field.name] = None
