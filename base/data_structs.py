@@ -77,7 +77,18 @@ class ProgressInfo(ObjectifiedDict):
 
 
 class ReprCustomMapping:
+    """
+    Custom Mapping for the extensive use of ReprMixin.
+    
+    Provides the ability to access nested attributes. 
+    Additionally, the use of eval is available and enabled by default for its functionality. This could be unsafe.
+    The use of eval provides access to built-in function calls, such as len and round. 
+    The available variable to be used in eval are 'self' and 'cls' both corresponding to the instance and the instance's class respectively.
+    """
+    
+    POSSIBLY_UNSAFE_ENABLE_EVAL = True # Enables the use of pythonic statements instead of only variable names
     _INSTANCES = {}
+    
     @classmethod
     def get_instance(cls, _obj):
         obj_id = id(_obj)
@@ -104,10 +115,13 @@ class ReprCustomMapping:
         try:
             getattr(self._object, name)
         except AttributeError:
+            if self.__class__.POSSIBLY_UNSAFE_ENABLE_EVAL and name.__contains__('('):
+                return eval(name, {'self':self._object, 'cls':self._object.__class__})
+            
             curr_obj = self._object
             for name in [attrname for attrname in name.split('.') if len(attrname) > 0]:
                 curr_obj = getattr(curr_obj, name)
             return curr_obj
     
     def update_data(self):
-        self._dict = self._object.__dict__
+        self._dict.update(self._object.__dict__)
