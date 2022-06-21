@@ -167,7 +167,7 @@ def cached(naive_cache=False, initial_cache=None, fallback_to_initial=False):
         func._cached_results = {} if initial_cache is None else {('cached' if naive_cache else initial_cache_key):initial_cache}
         @wraps(func)
         def wrapped(*args, recache=False, **kwargs):
-            key_for_cache = 'cached' if naive_cache else 'args={};kwargs={}'.format(args, kwargs)
+            key_for_cache = 'cached' if naive_cache else 'args={};kwargs={}'.format(tuple(id(e) for e in args), kwargs)
             if not (key_for_cache in func._cached_results) and not (fallback_to_initial and initial_cache_key in func._cached_results) or recache:
                 res = func(*args, **kwargs)
                 func._cached_results[key_for_cache] = res
@@ -185,7 +185,7 @@ def timed_cache(lifespan=60, naive_cache=False):
         func._cached_results = {}
         @wraps(func)
         def wrapped(*args, recache=False, **kwargs):
-            key_for_cache = 'cached' if naive_cache else 'args={};kwargs={}'.format(args, kwargs)
+            key_for_cache = 'cached' if naive_cache else 'args={};kwargs={}'.format(tuple(id(e) for e in args), kwargs)
             if not (key_for_cache in func._cached_results and (round(time.time()-func._cached_results[key_for_cache][0]) < func._cache_lifespan)) or recache:
                 res = func(*args, **kwargs)
                 func._cached_results[key_for_cache] = (time.time(), res)

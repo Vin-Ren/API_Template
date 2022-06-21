@@ -113,7 +113,7 @@ class ReprCustomMapping:
     
     def fallback_getter(self, name):
         try:
-            getattr(self._object, name)
+            return getattr(self._object, name)
         except AttributeError:
             if self.__class__.POSSIBLY_UNSAFE_ENABLE_EVAL and name.__contains__('('):
                 return eval(name, {'self':self._object, 'cls':self._object.__class__})

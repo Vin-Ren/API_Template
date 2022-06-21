@@ -14,7 +14,7 @@ class RegexParser(Parser):
         try:
             return super().__getattribute__(name)
         except AttributeError:
-            self.dynamic_parse(name)
+            return self.dynamic_parse(name)
     
     def dynamic_parse(self, name):
         if name.startswith('parse_one_'):

@@ -24,7 +24,7 @@ class API(ReprMixin, PluggableMixin):
     ALWAYS_CHECK_PREFIXED_BASE_URL = True
     LOGGED_IN_CACHE_LIFESPAN = 15*60
     
-    PLUGINS = [DownloadManager, CookiesManager]
+    PLUGINS = []
     
     _repr_format = "<%(classname)s LoggedIn=%(logged_in)s>" # Format of __repr__
     
@@ -35,6 +35,7 @@ class API(ReprMixin, PluggableMixin):
         return super().__init_subclass__()
     
     def __init__(self, credentials: Credential, config: Config, initialize=True, **kw):
+        super().__init__()
         self.credentials = credentials
         self.config = config
         
@@ -67,8 +68,6 @@ class API(ReprMixin, PluggableMixin):
 
     def _init(self):
         """Where you can set up the session, login, initialize directories, load cookies, etc. by default, this will set _logged_in value as login method return value."""
-        self[CookiesManager].load_cookies()
-        self[DownloadManager].register_defaults()
         self._logged_in = bool(self.login())
     
     def login(self):
