@@ -101,6 +101,7 @@ class OsuAPI(API):
     PARSER = RegexParser(RegexCollection)
     
     PLUGINS = [DownloadManager, CookiesManager]
+    REQUIRED_CONFIGS = {'database': 'db.sqlite3'}
     
     _repr_format = "<%(classname)s LoggedIn=%(logged_in)s Username=%(username)s>"
     
@@ -182,8 +183,8 @@ class OsuAPI(API):
 
 def get_api():
     api_key = input('API KEY:')
-    credentials = Credential(username=input('USERNAME:'), password=input('PASSWORD'))
-    basic_config = Config(database='db.sqlite3')
+    credentials = Credential(username=input('USERNAME:'), password=input('PASSWORD:'))
+    basic_config = OsuAPI.get_basic_config()
     return OsuAPI(api_key, credentials, basic_config)
 
 

@@ -55,8 +55,9 @@ class DownloadFileHandler(ReprMixin):
 
 class DownloadManager(BasePlugin):
     DOWNLOAD_CHUNK_SIZE = 512
-    
     _repr_format = "<%(classname)s DOWNLOAD_CHUNK_SIZE=%(DOWNLOAD_CHUNK_SIZE)s session_kwargs=%(session_kwargs)s>" # Format of __repr__
+    
+    REQUIRED_CONFIGS = dict(download_progress_bar_length=__import__('os').get_terminal_size().column * (5/8))
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

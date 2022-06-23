@@ -22,11 +22,15 @@ class CookiesManager(BasePlugin):
     DEFAULT_COOKIES_CACHING_METHOD = CookiesCachingMethod.JSON
     _repr_format = "<%(classname)s DEFAULT_COOKIES_CACHING_METHOD=%(DEFAULT_COOKIES_CACHING_METHOD)s>" # Format of __repr__
     
+    REQUIRED_CONFIGS = dict(cookies_caching_method=CookiesCachingMethod.JSON, 
+                            cached_cookies_filename='.cached', 
+                            data_passthrough={})
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     
     def __cookies_resolve_filename(self, method, filename=None):
-        method = CookiesCachingMethod(method) if method is not None else self.config.cookies_caching_method
+        method = CookiesCachingMethod(method if method is not None else self.config.cookies_caching_method)
         filename = self.config.cached_cookies_filename if filename is None else filename
         filename = filename+'.'+method.getExtension() if not filename.lower().__contains__(method.getExtension().lower()) else filename
     
