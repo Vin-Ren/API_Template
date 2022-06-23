@@ -1,6 +1,7 @@
 
 from types import NoneType
 from datetime import datetime
+from typing import Any, Dict, Literal
 
 from ...helper.decorator import cached
 from ...helper.class_mixin import ReprMixin
@@ -34,7 +35,7 @@ class Field(ReprMixin):
     CONVERTER = SQLiteConverter
     _repr_format = "<%(classname)s '%(name)s' type=%(type.__name__)s>"
     
-    def __init__(self, _type, name=None, *_, default=None, foreign_key=None, **opts):
+    def __init__(self, _type: type, name: str = None, *_, default: Any = None, foreign_key: ForeignKey = None, **opts: Dict[Literal['not_null', 'primary_key', 'auto_increment', 'unique'], bool]):
         self.type = _type
         self.name = name
         self.opts = {self.__class__.CONVERTER.OPTS.get(name.lower(), name):bool(value) for name, value in opts.items()}
