@@ -6,6 +6,7 @@ __pycache__/
 
 .cached*
 _reference/
+test*
 
 # C extensions
 *.so
