@@ -10,17 +10,23 @@ from .datatypes import *
 class BaseConverter:
     OPTS = {'not_null': 'NOT NULL', 'primary_key':'PRIMARY KEY', 'auto_increment':'AUTO INCREMENT', 'unique':'UNIQUE'}
     TYPE = {int:'INTEGER', str:'TEXT', blob:'BLOB', float:'REAL', datetime:'TEXT', bool:'INTEGER', NoneType:'NULL'}
-    VALUE = {int: int, str: lambda _s: _s, float:float, 
+    VALUE = {int: int, str: str, float:float, 
             datetime: lambda dt:dt.isoformat(), 
             bool: lambda _bool:1 if _bool else 0, -1: str}
+    REVERSE_VALUE = {int: int, str:str, float:float, 
+                    datetime: lambda _s:datetime.fromisoformat(_s),
+                    bool: bool, -1: str}
 
 
 class SQLiteConverter(BaseConverter):
     OPTS = {'not_null': 'NOT NULL', 'primary_key':'PRIMARY KEY', 'auto_increment':'AUTO INCREMENT', 'unique':'UNIQUE'}
     TYPE = {int:'INTEGER', str:'TEXT', blob:'BLOB', float:'REAL', datetime:'TEXT', bool:'INTEGER', NoneType:'NULL'}
-    VALUE = {int: int, str: lambda _s: '{}'.format(_s), float:float, 
-            datetime: lambda dt:'{}'.format(dt.isoformat()), 
+    VALUE = {int: int, str: str, float:float, 
+            datetime: lambda dt:dt.isoformat(), 
             bool: lambda _bool:1 if _bool else 0, -1: str}
+    REVERSE_VALUE = {int: int, str:str, float:float, 
+                    datetime: lambda _s:datetime.fromisoformat(_s),
+                    bool: bool, -1: str}
 
 
 class Field(ReprMixin):
@@ -44,6 +50,9 @@ class Field(ReprMixin):
     
     def convert_value(self, value):
         return self.CONVERTER.VALUE.get(self.type, self.CONVERTER.VALUE[-1])(value)
+    
+    def invert_value_conversion(self, value):
+        return self.CONVERTER.REVERSE_VALUE.get(self.type, self.CONVERTER.REVERSE_VALUE[-1])(value)
     
     def get_type_str(self):
         return self.CONVERTER.TYPE.get(self.type)
