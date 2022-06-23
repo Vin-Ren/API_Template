@@ -1,12 +1,13 @@
 
-from typing import Union, List, Dict
+from typing import Any, Union, List, Dict
 
-from ..data_structs import ObjectifiedDict
+from ..data_structs import ObjectifiedDict, Config
 from ..helper.class_mixin import ReprMixin
 
 
 class _BasePlugin(ReprMixin):
     ENABLE_GETITEM_VARIABLE_ACCESS = False
+    REQUIRED_CONFIGS: Dict[str, Any] = {} # A dictionary of required config entries of the plugin. with form as such: {'config name': config default value}. e.g: {'retry_count': 3}
     
     def __getattribute__(self, name):
         try:
@@ -36,6 +37,7 @@ class PluggableMixin:
     PLUGINS_ACCESSIBLE_THROUGH_INSTANCE_VARIABLE = False
     ENABLE_DIRECT_GETATTR_PLUGINS_ACCESS = False
     INHERIT_PLUGINS = True
+    REQUIRED_CONFIGS: Dict[str, Any] = {} # For additional configuration the api might need
     
     def __getattribute__(self, name):
         try:
@@ -64,26 +66,36 @@ class PluggableMixin:
     def __getitem__(self, name):
         return self._plugins.__getitem__(name)
     
-    def __init__(self, *args, **kwargs):
-        if isinstance(self.__class__.PLUGINS, dict):
+    def __init_subclass__(cls):
+        if isinstance(cls.PLUGINS, dict):
             # Updating plugins
-            if self.__class__.INHERIT_PLUGINS:
+            if cls.INHERIT_PLUGINS:
                 plugins = {}
-                [plugins.update(current_cls_plugins) for current_cls_plugins in reversed([cls.PLUGINS for cls in self.__class__.mro() if issubclass(cls, self.__class__) and isinstance(cls.PLUGINS, dict)])]
-                self.__class__.PLUGINS = plugins
+                [plugins.update(current_cls_plugins) for current_cls_plugins in reversed([_cls.PLUGINS for _cls in cls.mro() if issubclass(_cls, PluggableMixin) and isinstance(_cls.PLUGINS, dict)])]
+                cls.PLUGINS = plugins
             
-            self._plugins = {name: plugin(self) for name, plugin in self.__class__.PLUGINS.items()}
+            cls._plugins = {name: plugin(cls) for name, plugin in cls.PLUGINS.items()}
         else:
             # Updating plugins
-            if self.__class__.INHERIT_PLUGINS:
+            if cls.INHERIT_PLUGINS:
                 plugins = []
-                [plugins.extend(current_cls_plugins) for current_cls_plugins in reversed([cls.PLUGINS for cls in self.__class__.mro() if issubclass(cls, self.__class__) and isinstance(cls.PLUGINS, list)])]
-                self.__class__.PLUGINS = list(set(plugins))
+                [plugins.extend(current_cls_plugins) for current_cls_plugins in reversed([_cls.PLUGINS for _cls in cls.mro() if issubclass(_cls, PluggableMixin) and isinstance(_cls.PLUGINS, list)])]
+                cls.PLUGINS = list(set(plugins))
             
-            if self.__class__.PLUGINS_ACCESSIBLE_THROUGH_INSTANCE_VARIABLE:
-                self._plugins = {plugin.__name__: plugin(self) for plugin in self.__class__.PLUGINS}
+            if cls.PLUGINS_ACCESSIBLE_THROUGH_INSTANCE_VARIABLE:
+                cls._plugins = {plugin.__name__: plugin(cls) for plugin in cls.PLUGINS}
             else:
-                self._plugins = {plugin: plugin(self) for plugin in self.__class__.PLUGINS}
-        super().__init__(*args, **kwargs)
-        self._plugins = ObjectifiedDict(self._plugins)
-        self.__pluggable_mixin_cached_method_table = {}
+                cls._plugins = {plugin: plugin(cls) for plugin in cls.PLUGINS}
+        
+        cls._plugins = ObjectifiedDict(cls._plugins)
+        cls._required_configs = Config({name: default for plugin in cls._plugins for name, default in plugin.REQUIRED_CONFIGS.keys()})
+        cls._required_configs.update(cls.REQUIRED_CONFIGS)
+        cls.__pluggable_mixin_cached_method_table = {}
+
+    @classmethod
+    def get_required_config_fields(cls):
+        return list(cls._required_configs.keys())
+
+    @classmethod
+    def get_basic_config(cls):
+        return cls._required_configs
