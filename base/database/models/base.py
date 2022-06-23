@@ -1,5 +1,5 @@
 
-from types import FunctionType
+from typing import Dict
 from .field import Field
 
 from ...helper.decorator import cached
@@ -7,6 +7,9 @@ from ...helper.class_mixin import ReprMixin
 
 
 class ModelMeta(type):
+    table_name: str
+    __FIELDS__: Dict[str, Field]
+    
     def __repr__(cls):
         return "<%s Model with %s Fields>" % (cls.__name__, len(cls.__FIELDS__))
     

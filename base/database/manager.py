@@ -84,6 +84,9 @@ class SQLiteDB(BaseManager):
     
     def select(self, select_query):
         return self._select(select_query)
+    
+    def get_all(self, model: Model):
+        return self._select("SELECT * FROM %s" % model.table_name)
 
 
 class MultiThreadedSQLiteDB(SQLiteDB):
