@@ -56,7 +56,6 @@ class CursorProxy:
                 for accessor in task.target_method.split('.'):
                     method = method.__getattribute__(accessor)
                 method(*task.args, **task.kwargs)
-                print(method)
         finally:
             self.proxy_cursor.close()
     

@@ -23,7 +23,7 @@ class SQLiteConverter(BaseConverter):
     OPTS = {'not_null': 'NOT NULL', 'primary_key':'PRIMARY KEY', 'auto_increment':'AUTO INCREMENT', 'unique':'UNIQUE'}
     TYPE = {int:'INTEGER', str:'TEXT', blob:'BLOB', float:'REAL', datetime:'TEXT', bool:'INTEGER', NoneType:'NULL'}
     VALUE = {int: int, str: str, float:float, 
-            datetime: lambda dt:dt.isoformat(), 
+            datetime: lambda dt:datetime.fromisoformat(dt).isoformat() if isinstance(dt, str) else datetime.fromtimestamp(dt).isoformat() if isinstance(dt, int) else dt.isoformat(), 
             bool: lambda _bool:1 if _bool else 0, -1: str}
     REVERSE_VALUE = {int: int, str:str, float:float, 
                     datetime: lambda _s:datetime.fromisoformat(_s),
@@ -44,7 +44,8 @@ class Field(ReprMixin):
     
     def is_valid(self, value):
         try:
-            self.convert_value(value)
+            if self.opts.get('NOT NULL'):
+                self.convert_value(value)
             return True
         except:
             raise

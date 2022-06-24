@@ -87,7 +87,7 @@ class PluggableMixin:
             else:
                 cls._PLUGINS = {plugin: plugin for plugin in cls.PLUGINS}
         
-        cls._required_configs = Config({name: default for plugin in cls._PLUGINS for name, default in plugin.REQUIRED_CONFIGS.keys()})
+        cls._required_configs = Config({name: default for plugin in cls._PLUGINS for name, default in plugin.REQUIRED_CONFIGS.items()})
         cls._required_configs.update(cls.REQUIRED_CONFIGS)
         cls.__pluggable_mixin_cached_method_table = {}
 

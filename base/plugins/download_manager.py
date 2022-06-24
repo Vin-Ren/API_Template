@@ -16,18 +16,19 @@ class DownloadFileHandler(ReprMixin):
         try:
             return super().__getattribute__(name)
         except AttributeError:
-            return getattr(self.handler, name)
+            return getattr(self.temp_handler, name)
     
     def __init__(self, filename):
         self.filename = filename
-        self.temporary_filename = os.path.join(self.__class__.TEMPORARY_DIR, filename, self.__class__.TEMPORARY_EXTENSION)
-        self.temp_handler = open(self.temporary_filename, 'wb')
+        self.temporary_filename = os.path.join(self.__class__.TEMPORARY_DIR, filename+'.'+self.__class__.TEMPORARY_EXTENSION)
         
         if len(self.__class__.TEMPORARY_DIR) > 0:
             try:
                 os.makedirs(self.__class__.TEMPORARY_DIR)
             except:
                 pass
+        
+        self.temp_handler = open(self.temporary_filename, 'wb')
     
     def __enter__(self):
         return self
@@ -50,14 +51,14 @@ class DownloadFileHandler(ReprMixin):
                     dest_file.write(content)
     
     def drop(self):
-        os.remove(os.path.join(os.path.abspath(), self.TEMPORARY_DIR, self.temporary_filename))
+        os.remove(os.path.abspath(os.path.join(self.TEMPORARY_DIR, self.temporary_filename)))
 
 
 class DownloadManager(BasePlugin):
     DOWNLOAD_CHUNK_SIZE = 512
     _repr_format = "<%(classname)s DOWNLOAD_CHUNK_SIZE=%(DOWNLOAD_CHUNK_SIZE)s session_kwargs=%(session_kwargs)s>" # Format of __repr__
     
-    REQUIRED_CONFIGS = dict(download_progress_bar_length=__import__('os').get_terminal_size().column * (5/8))
+    REQUIRED_CONFIGS = dict(download_progress_bar_length=__import__('os').get_terminal_size().columns * (5/8))
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

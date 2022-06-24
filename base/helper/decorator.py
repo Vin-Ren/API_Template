@@ -51,7 +51,7 @@ def check_attrs(__checks: Dict[str, Union[Tuple[callable, BaseException], Any]]=
         def wrapper(self, *args, **kwargs):
             for attr, check_and_optional_exception in func.__attrs_checks.items():
                 if hasattr(self, attr):
-                    if isinstance(check, tuple):
+                    if isinstance(check_and_optional_exception, tuple):
                         check, *_, exception = check_and_optional_exception
                     else:
                         check, exception = (check_and_optional_exception, FailedCheck())
