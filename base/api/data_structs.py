@@ -2,6 +2,7 @@ import re
 
 from ..data_structs import *
 from ..database.models import Model
+from ..helper.snippets import dict_updater
 
 
 class BaseURLCollection:
@@ -27,6 +28,16 @@ class BaseAPIObject(ObjectifiedDict, Model):
     """
     A Base to inherit from for API Objects. Inherits from both ObjectifiedDict and Model."""
     REQUIRED_FIELDS = []
+    DEFAULT_VALUES = {}
+    
+    def __init__(self, _dict={}, *_, **kwargs):
+        _dict.update(kwargs)
+        super().__init__(_dict)
+        for key, value in self.__class__.DEFAULT_VALUES.items():
+            if key in self and self[key] is not None:
+                continue
+            self[key] = value
+    
     @property
     def valid(self):
         return all(map(lambda key:self.__contains__(key), self.REQUIRED_FIELDS))

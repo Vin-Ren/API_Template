@@ -41,10 +41,11 @@ class BaseOsuObject(BaseAPIObject):
 
 class Beatmap(BaseOsuObject):
     __TABLE_NAME__ = 'beatmaps'
-    REQUIRED_FIELDS = ['beatmap_id', 'beatmapset_id', 'approved', 'title', 'version']
+    REQUIRED_FIELDS = ['beatmap_id', 'beatmapset_id', 'approved', 'title', 'version', 'artist']
     # First type of implementation for Model
     beatmap_id = Field(int, primary_key=True, not_null=True, unique=True)
     beatmapset_id = Field(int, not_null=True)
+    artist = Field(str, not_null=True)
     approved = Field(int, not_null=True)
     title = Field(str, not_null=True)
     version = Field(str, not_null=True)
@@ -60,6 +61,7 @@ class Beatmap(BaseOsuObject):
 class User(BaseOsuObject):
     __TABLE_NAME__ = 'users'
     REQUIRED_FIELDS = ['user_id', 'username', 'join_date', 'level', 'pp_raw']
+    DEFAULT_VALUES = {'pp_raw': 0.0, 'level': 0.0}
     # Second type of implementation for Model
     __FIELDS__ = [
         Field(int, 'user_id', primary_key=True, not_null=True, unique=True), 
@@ -67,7 +69,7 @@ class User(BaseOsuObject):
         Field(datetime, 'join_date', not_null=True),
         Field(float, 'level', not_null=True),
         Field(float, 'pp_raw', not_null=True)]
-
+    
     def __repr__(self):
         if not self.valid:
             return "<Invalid {} object>".format(self.__class__.__name__)
