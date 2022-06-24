@@ -74,7 +74,7 @@ class PluggableMixin:
                 [plugins.update(current_cls_plugins) for current_cls_plugins in reversed([_cls.PLUGINS for _cls in cls.mro() if issubclass(_cls, PluggableMixin) and isinstance(_cls.PLUGINS, dict)])]
                 cls.PLUGINS = plugins
             
-            cls._plugins = {name: plugin(cls) for name, plugin in cls.PLUGINS.items()}
+            cls._PLUGINS = {name: plugin for name, plugin in cls.PLUGINS.items()}
         else:
             # Updating plugins
             if cls.INHERIT_PLUGINS:
@@ -83,14 +83,17 @@ class PluggableMixin:
                 cls.PLUGINS = list(set(plugins))
             
             if cls.PLUGINS_ACCESSIBLE_THROUGH_INSTANCE_VARIABLE:
-                cls._plugins = {plugin.__name__: plugin(cls) for plugin in cls.PLUGINS}
+                cls._PLUGINS = {plugin.__name__: plugin for plugin in cls.PLUGINS}
             else:
-                cls._plugins = {plugin: plugin(cls) for plugin in cls.PLUGINS}
+                cls._PLUGINS = {plugin: plugin for plugin in cls.PLUGINS}
         
-        cls._plugins = ObjectifiedDict(cls._plugins)
-        cls._required_configs = Config({name: default for plugin in cls._plugins for name, default in plugin.REQUIRED_CONFIGS.keys()})
+        cls._required_configs = Config({name: default for plugin in cls._PLUGINS for name, default in plugin.REQUIRED_CONFIGS.keys()})
         cls._required_configs.update(cls.REQUIRED_CONFIGS)
         cls.__pluggable_mixin_cached_method_table = {}
+
+    def __init__(self, *args, **kwargs):
+        self._plugins = ObjectifiedDict({accessor: plugin(self) for accessor, plugin in self.__class__._PLUGINS.items()})
+        super().__init__(*args, **kwargs)
 
     @classmethod
     def get_required_config_fields(cls):
