@@ -54,7 +54,8 @@ class Model(ReprMixin, metaclass=ModelMeta):
     
     def __setattr__(self, name, value):
         if name in self.__class__.__FIELDS__:
-            if self.__class__.__FIELDS__.get(name).is_valid(value):
+            field = self.__class__.__FIELDS__.get(name)
+            if field.is_valid(value):
                 super().__setattr__(name, value)
     
     def __init__(self, _dict={}, *_, **kwargs):
@@ -102,3 +103,9 @@ class Model(ReprMixin, metaclass=ModelMeta):
         query = self.__class__.make_insert_query(replace=replace, ignore=ignore)
         values = self.make_insert_values()
         return (query, values)
+    
+    @classmethod
+    def make_select_query(cls, comparator=None):
+        if comparator is None:
+            return "SELECT * FROM %s" % (cls.table_name)
+        return "SELECT * FROM %s WHERE %s" % (cls.table_name, comparator.make_query())

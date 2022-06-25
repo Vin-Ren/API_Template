@@ -1,32 +1,33 @@
 
 from types import NoneType
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Literal
 
 from ...helper.decorator import cached
 from ...helper.class_mixin import ReprMixin
 from .datatypes import *
+from .statement import Comparator
 
 
 class BaseConverter:
     OPTS = {'not_null': 'NOT NULL', 'primary_key':'PRIMARY KEY', 'auto_increment':'AUTO INCREMENT', 'unique':'UNIQUE'}
-    TYPE = {int:'INTEGER', str:'TEXT', blob:'BLOB', float:'REAL', datetime:'TEXT', bool:'INTEGER', NoneType:'NULL'}
+    TYPE = {int:'INTEGER', str:'TEXT', blob:'BLOB', float:'REAL', datetime:'REAL', bool:'INTEGER', NoneType:'NULL'}
     VALUE = {int: int, str: str, float:float, 
-            datetime: lambda dt:dt.isoformat(), 
+            datetime: lambda dt:dt.timestamp(), 
             bool: lambda _bool:1 if _bool else 0, -1: str}
     REVERSE_VALUE = {int: int, str:str, float:float, 
-                    datetime: lambda _s:datetime.fromisoformat(_s),
+                    datetime: lambda _s:datetime.fromtimestamp(_s),
                     bool: bool, -1: str}
 
 
 class SQLiteConverter(BaseConverter):
     OPTS = {'not_null': 'NOT NULL', 'primary_key':'PRIMARY KEY', 'auto_increment':'AUTO INCREMENT', 'unique':'UNIQUE'}
-    TYPE = {int:'INTEGER', str:'TEXT', blob:'BLOB', float:'REAL', datetime:'TEXT', bool:'INTEGER', NoneType:'NULL'}
+    TYPE = {int:'INTEGER', str:'TEXT', blob:'BLOB', float:'REAL', datetime:'REAL', bool:'INTEGER', NoneType:'NULL'}
     VALUE = {int: int, str: str, float:float, 
-            datetime: lambda dt:datetime.fromisoformat(dt).isoformat() if isinstance(dt, str) else datetime.fromtimestamp(dt).isoformat() if isinstance(dt, int) else dt.isoformat(), 
+            datetime: lambda dt:(datetime.fromisoformat(dt) if isinstance(dt, str) else datetime.fromtimestamp(dt) if isinstance(dt, int) else dt).replace(tzinfo=timezone.utc).timestamp(), 
             bool: lambda _bool:1 if _bool else 0, -1: str}
     REVERSE_VALUE = {int: int, str:str, float:float, 
-                    datetime: lambda _s:datetime.fromisoformat(_s),
+                    datetime: lambda _i:datetime.utcfromtimestamp(_i),
                     bool: bool, -1: str}
 
 
@@ -39,8 +40,32 @@ class Field(ReprMixin):
         self.type = _type
         self.name = name
         self.opts = {self.__class__.CONVERTER.OPTS.get(name.lower(), name):bool(value) for name, value in opts.items()}
-        self.default=default
+        self.default = default
         self.foreign_key = foreign_key
+    
+    def make_comparator(self, op, other):
+        if self.is_valid(other):
+            if self.get_type_str() in ['TEXT', 'BLOB']:
+                return Comparator(self.name, op, '"{}"'.format(self.convert_value(other)))
+            return Comparator(self.name, op, self.convert_value(other))
+    
+    def __eq__(self, other):
+        return self.make_comparator('==', other)
+    
+    def __ne__(self, other):
+        return Comparator(self.name, '!=', other) # Doesn't need type check and conversion
+    
+    def __lt__(self, other):
+        return self.make_comparator('<', other)
+    
+    def __le__(self, other):
+        return self.make_comparator('<=', other)
+    
+    def __gt__(self, other):
+        return self.make_comparator('>', other)
+    
+    def __ge__(self, other):
+        return self.make_comparator('>=', other)
     
     def is_valid(self, value):
         try:
