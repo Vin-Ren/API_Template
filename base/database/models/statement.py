@@ -46,15 +46,26 @@ class BinaryOperator(BaseComparator):
     def make_query(self):
         return '{} {} {}'.format(self.left.make_query(), self.__class__.OPERATOR, self.right.make_query())
 
+
+class JoinOperator(BinaryOperator):
+    "Similiar to BinaryOperator, but with no limit for statements"
+    OPERATOR = ''
+    def __init__(self, *statements):
+        self.statements = statements
+    
+    def make_query(self):
+        return self.__class__.OPERATOR.join(self.statements)
+
+
 # Operators
 
 class NOT(UnaryOperator):
     OPERATOR = 'NOT'
 
-class OR(BinaryOperator):
+class OR(JoinOperator):
     OPERATOR = 'OR'
 
-class AND(BinaryOperator):
+class AND(JoinOperator):
     OPERATOR = 'AND'
 
 
