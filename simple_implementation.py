@@ -90,7 +90,7 @@ class NotLoggedIn(BaseOsuException, RuntimeError):
     pass
 
 
-@exception_handler # Naming conflict if referenced again, but will you?
+@exception_handler(BaseOsuException) # Naming conflict if referenced again, but will you?
 def exception_handler(exception):
     if isinstance(exception, NotLoggedIn):
         print("This functionality requires you to be logged in.")
