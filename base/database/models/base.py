@@ -4,6 +4,7 @@ from .field import Field
 
 from ...helper.decorator import cached
 from ...helper.class_mixin import ReprMixin
+from .statement import AND
 
 
 class ModelMeta(type):
@@ -43,7 +44,13 @@ class ModelMeta(type):
         
         new_attrs.update({'__FIELDS__':fields, **fields})
         
+        new_attrs['DB_MANAGER'] = attrs.get('DB_MANAGER')
+        
         return super().__new__(cls, clsname, bases, new_attrs, **kw)
+    
+    def register_db_manager(cls, db_manager):
+        "Registers a DB Manager for the corresponding model shorthands."
+        cls.DB_MANAGER = db_manager
 
 
 class Model(ReprMixin, metaclass=ModelMeta):
@@ -109,3 +116,26 @@ class Model(ReprMixin, metaclass=ModelMeta):
         if comparator is None:
             return "SELECT * FROM %s" % (cls.table_name)
         return "SELECT * FROM %s WHERE %s" % (cls.table_name, comparator.make_query())
+    
+    @classmethod
+    def db_manager_registered(cls, raise_err=True):
+        if cls.DB_MANAGER is None:
+            if raise_err:
+                raise RuntimeError("No DB Manager registered for model '{}'.".format(cls.__name__))
+            return False
+        return True
+    
+    @classmethod
+    def create_table(cls):
+        if cls.db_manager_registered():
+            return cls.DB_MANAGER.create_table(cls)
+    
+    @classmethod
+    def get(cls, *statements):
+        if cls.db_manager_registered():
+            return cls.DB_MANAGER.get(cls, AND(*statements))
+    
+    @classmethod
+    def get_all(cls):
+        if cls.db_manager_registered():
+            return cls.DB_MANAGER.get_all(cls)

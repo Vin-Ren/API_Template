@@ -23,7 +23,8 @@ class BaseManager(ReprMixin):
 
 
 class SQLiteDB(BaseManager):
-    TABLES = []
+    TABLES: List[ModelMeta] = []
+    REGISTER_AS_MODEL_DB = True
     
     _repr_format = "<%(classname)s Manager>"
     
@@ -50,8 +51,13 @@ class SQLiteDB(BaseManager):
         return self.connection.commit()
     
     def _init(self):
-        for table in self.__class__.TABLES:
-            self.create_table(table)
+        if self.__class__.REGISTER_AS_MODEL_DB:
+            for table in self.__class__.TABLES:
+                table.register_db_manager(self)
+                self.create_table(table)
+        else:
+            for table in self.__class__.TABLES:
+                self.create_table(table)
     
     def create_table(self, model: Union[ModelMeta, Model]):
         self.cursor.execute(model.make_create_query())
