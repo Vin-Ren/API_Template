@@ -29,7 +29,7 @@ class ModelMeta(type):
             if not isinstance(value, Field):
                 new_attrs[name] = value
                 continue
-            fields[name] = Field(value.type, value.name if value.name is not None else name, default=value.default, foreign_key=value.foreign_key, **value.opts)
+            fields[name] = field_class(value.type, value.name if value.name is not None else name, default=value.default, foreign_key=value.foreign_key, **value.opts)
         
         if attrs.get('__TABLE_NAME__') is not None:
             new_attrs['table_name'] = attrs.get('__TABLE_NAME__')
