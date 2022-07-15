@@ -122,7 +122,14 @@ class OsuAPI(API):
     
     def _init(self):
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36'}
-        return super()._init()
+        
+        cookies_manager: CookiesManager = self[CookiesManager]
+        try:
+            cookies_manager.load_cookies()
+            self._logged_in = True
+        except (FileNotFoundError, FileExistsError):
+            self._logged_in = bool(self.login())
+            cookies_manager.dump_cookies()
     
     def request_params_preprocessor(self, params):
         params.update({'k': self.api_key})
