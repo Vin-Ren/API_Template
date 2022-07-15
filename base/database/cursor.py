@@ -52,10 +52,13 @@ class CursorProxy:
             self.proxy_cursor = self.proxy_connection.cursor()
             while True:
                 task: CursorTask = self.queue.get(True)
-                method = self.proxy_cursor
-                for accessor in task.target_method.split('.'):
-                    method = method.__getattribute__(accessor)
-                method(*task.args, **task.kwargs)
+                if task.target_method.__contains__('.'):
+                    method = self.proxy_cursor
+                    for accessor in task.target_method.split('.'):
+                        method = method.__getattribute__(accessor)
+                    method(*task.args, **task.kwargs)
+                else:
+                    self.proxy_cursor.__getattribute__(task.target_method)(*task.args, **task.kwargs)
         finally:
             self.proxy_cursor.close()
     
