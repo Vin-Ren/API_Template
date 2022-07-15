@@ -22,7 +22,7 @@ class CookiesManager(BasePlugin):
     DEFAULT_COOKIES_CACHING_METHOD = CookiesCachingMethod.JSON
     _repr_format = "<%(classname)s DEFAULT_COOKIES_CACHING_METHOD=%(DEFAULT_COOKIES_CACHING_METHOD)s>" # Format of __repr__
     
-    REQUIRED_CONFIGS = dict(cookies_caching_method=CookiesCachingMethod.JSON, 
+    REQUIRED_CONFIGS = dict(cookies_caching_method=DEFAULT_COOKIES_CACHING_METHOD, 
                             cached_cookies_filename='.cached', 
                             data_passthrough={})
     
