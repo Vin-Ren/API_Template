@@ -2,14 +2,12 @@ from enum import Enum
 
 from datetime import datetime
 
-from base.api.api import API
-from base.api.data_structs import BaseURLCollection, Credential, Config, RegexCollection, BaseAPIObject
-from base.api.parser import RegexParser
-from base.database.models.field import Field
-from base.helper.decorator import convert_to, check_attrs, exception_handler
-from base.plugins.cookies_manager import CookiesManager
-from base.plugins.download_manager import DownloadManager
-from base.database.manager import MultiThreadedSQLiteDB
+from base.api import (API, 
+                      BaseURLCollection, BaseAPIObject, RegexCollection, Credential, Config, 
+                      RegexParser)
+from base.database import MultiThreadedSQLiteDB, Field
+from base.helper import convert_to, check_attrs, exception_handler
+from base.plugins import DownloadManager, CookiesManager
 
 
 class UrlCollection(BaseURLCollection):

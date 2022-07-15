@@ -3,7 +3,7 @@ from queue import Queue
 import sqlite3
 from threading import Thread
 
-from typing import Any, Dict, Tuple
+from typing import Dict, Tuple
 
 
 CursorTask = namedtuple('CursorTask', ['target_method', 'args', 'kwargs'])

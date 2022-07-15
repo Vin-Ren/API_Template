@@ -10,3 +10,11 @@ STR = Str = str
 FLOAT = Float = float
 DATETIME = DateTime = datetime
 BOOLEAN = Boolean = bool
+
+__all__ = ['ForeignKey', 
+           'BLOB', 'blob', 
+           'INT', 'Int', 
+           'STR', 'Str', 
+           'Float', 'Float', 
+           'DATETIME', 'Datetime', 'datetime', 
+           'BOOLEAN', 'Boolean']

@@ -9,8 +9,6 @@ from ..data_structs import Credential, Config
 from .data_structs import BaseURLCollection, ResponseContainer
 from .parser import Parser
 from ..helper.class_mixin import ReprMixin, PluggableMixin
-from ..plugins.download_manager import DownloadManager
-from ..plugins.cookies_manager import CookiesManager
 from ..helper.printer import PrettyPrinter
 
 
