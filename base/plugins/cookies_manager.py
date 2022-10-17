@@ -33,6 +33,7 @@ class CookiesManager(BasePlugin):
         method = CookiesCachingMethod(method if method is not None else self.config.cookies_caching_method)
         filename = self.config.cached_cookies_filename if filename is None else filename
         filename = filename+'.'+method.getExtension() if not filename.lower().__contains__(method.getExtension().lower()) else filename
+        return filename
     
     def load_cookies(self, method=None, filename=None):
         filename = self.__cookies_resolve_filename(method=method, filename=filename)
