@@ -1,8 +1,11 @@
 
-from typing import Any, Union, List, Dict
+from typing import Any, Union, List, Dict, TypeVar
 
 from ..data_structs import ObjectifiedDict, Config
 from ..helper.class_mixin import ReprMixin
+
+
+T=TypeVar('T')
 
 
 class _BasePlugin(ReprMixin):
@@ -63,7 +66,7 @@ class PluggableMixin:
                     pass
             raise exc
     
-    def __getitem__(self, name):
+    def __getitem__(self, name: T) -> T:
         return self._plugins.__getitem__(name)
     
     def __init_subclass__(cls):

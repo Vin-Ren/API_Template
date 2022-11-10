@@ -125,7 +125,7 @@ def exception_handler(excepted = BaseException, *extra_excepted):
         if isinstance(excepted, (Tuple, List)):
             excepted = excepted + extra_excepted
         else:
-            excepted = [excepted] + extra_excepted
+            excepted = [excepted] + list(extra_excepted)
         
         def decorator(func):
             """Decorator when exception_handler is used with arguments."""

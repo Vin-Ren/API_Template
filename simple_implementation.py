@@ -121,7 +121,7 @@ class OsuAPI(API):
     def _init(self):
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36'}
         
-        cookies_manager: CookiesManager = self[CookiesManager]
+        cookies_manager = self[CookiesManager] # not required for typehints anymore but dry
         try:
             cookies_manager.load_cookies()
             self._logged_in = True
@@ -178,8 +178,7 @@ class OsuAPI(API):
         beatmapset_download_url = self.URLS.formattable_beatmapset_download.format(beatmap)
         headers = {'referer': beatmapset_url}
         
-        downloader: DownloadManager = self[DownloadManager] # Only for type hinting
-        progress_info = downloader.download_to_file(filename, url=beatmapset_download_url, params=params, headers=headers, allow_redirects=True)
+        progress_info = self[DownloadManager].download_to_file(filename, url=beatmapset_download_url, params=params, headers=headers, allow_redirects=True)
         
         self.PRINTER.print_debug('Download Process', 
                                 {'Beatmap Info':beatmap, 'Download Url':beatmapset_download_url, 

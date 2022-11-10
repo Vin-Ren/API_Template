@@ -16,5 +16,5 @@ __all__ = ['ForeignKey',
            'INT', 'Int', 
            'STR', 'Str', 
            'Float', 'Float', 
-           'DATETIME', 'Datetime', 'datetime', 
+           'DATETIME', 'DateTime', 'datetime', 
            'BOOLEAN', 'Boolean']
