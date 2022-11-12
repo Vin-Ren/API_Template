@@ -36,7 +36,7 @@ class CookiesManager(BasePlugin):
         return filename
     
     def load_cookies_from_string(self, cookies_string):
-        cookies_entries = [entry.strip().split('=', 1) for entry in cookies_string.split(";")]
+        cookies_entries = [entry.strip().split('=', 1) for entry in cookies_string.split(";") if entry.__contains__('=')]
         cookies = requests.utils.cookiejar_from_dict({k:v for k,v in cookies_entries})
         self.api.session.cookies.update(cookies)
     
