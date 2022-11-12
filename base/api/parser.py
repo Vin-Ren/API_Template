@@ -1,12 +1,11 @@
 import abc
 
 import requests
+import bs4
 
 
 class Parser(abc.ABC):
-    @abc.abstractmethod
-    def parse(self):
-        pass
+    """Base parser, essentially empty, you can use presets available, modify them or even create one specific to your own project."""
 
 
 class RegexParser(Parser):
@@ -52,3 +51,15 @@ class RegexParser(Parser):
     
     def parse_one_from_response(self, regex_name: str, response: requests.Response):
         return self.parse_one(regex_name, response.text)
+
+
+class BSParser(Parser):
+    """Base BeautifulSoup Parser, really empty. You should extend this class with your own subclass to accomodate your need."""
+    def __init__(self, parser: str = 'html.parser'):
+        self.parser=parser
+
+    def get_soup(self, text: str):
+        return bs4.BeautifulSoup(text, self.parser)
+        
+    def get_soup_from_response(self, resp:requests.Response):
+        return self.get_soup(resp.text)

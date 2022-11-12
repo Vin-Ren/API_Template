@@ -3,8 +3,8 @@ from enum import Enum
 from datetime import datetime
 
 from base.api import (API, 
-                      BaseURLCollection, BaseAPIObject, RegexCollection, Credential, Config, 
-                      RegexParser)
+                      BaseURLCollection, BaseAPIObject, Credential, Config, 
+                      BSParser)
 from base.database import MultiThreadedSQLiteDB, Field
 from base.helper import convert_to, check_attrs, exception_handler
 from base.plugins import DownloadManager, CookiesManager
@@ -98,7 +98,7 @@ def exception_handler(exception):
 
 class OsuAPI(API):
     URLS = UrlCollection
-    PARSER = RegexParser(RegexCollection)
+    PARSER = BSParser()
     
     PLUGINS = [DownloadManager, CookiesManager]
     REQUIRED_CONFIGS = {'database': 'db.sqlite3'}
@@ -137,10 +137,11 @@ class OsuAPI(API):
         resp = self.get(self.URLS.home)
         self.recent_method_response['get_csrf_token'] = resp
         if resp.status_code == 200:
-            match_dict = self.PARSER.parse_one_csrf_token(resp.text)
-            try:
-                return match_dict.get('csrftoken')
-            except AttributeError:
+            soup = self.PARSER.get_soup(resp.text)
+            token = soup.find('meta', attrs={'name':'csrf-token'}).get('content')
+            if token is not None:
+                return token
+            else:
                 print("CSRF Token Error: Could not find CSRF token in the page.")
         elif resp.status_code == 429:
             print("CSRF Token Error: 429 Too Many Requests.")
