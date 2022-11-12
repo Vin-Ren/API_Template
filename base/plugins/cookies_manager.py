@@ -35,6 +35,11 @@ class CookiesManager(BasePlugin):
         filename = filename+'.'+method.getExtension() if not filename.lower().__contains__(method.getExtension().lower()) else filename
         return filename
     
+    def load_cookies_from_string(self, cookies_string):
+        cookies_entries = [entry.strip().split('=', 1) for entry in cookies_string.split(";")]
+        cookies = requests.utils.cookiejar_from_dict({k:v for k,v in cookies_entries})
+        self.api.session.cookies.update(cookies)
+    
     def load_cookies(self, method=None, filename=None):
         filename = self.__cookies_resolve_filename(method=method, filename=filename)
         
