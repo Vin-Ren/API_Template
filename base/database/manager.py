@@ -2,7 +2,7 @@
 import sqlite3
 from typing import List, Union
 
-from base.database.models.base import Model, ModelMeta
+from .models.base import Model, ModelMeta
 from ..helper.class_mixin import ReprMixin
 
 from .cursor import CursorProxy

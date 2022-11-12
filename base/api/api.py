@@ -2,7 +2,7 @@ import logging
 
 import requests
 
-from base.helper.decorator import timed_cache
+from ..helper.decorator import timed_cache
 
 
 from ..data_structs import Credential, Config
