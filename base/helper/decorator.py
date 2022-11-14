@@ -85,12 +85,12 @@ def handle_exception(handler: Callable[[BaseException], NoneType], excepted: Uni
     return decorator
 
 
-def create_exception_handler(handler: Callable[[BaseException], NoneType], excepted: Union[BaseException, Tuple[BaseException]] = BaseException):
+def create_exception_handler(handler: Callable[[BaseException], NoneType], excepted: Union[BaseException, Tuple[BaseException]] = RuntimeError):
     """Wraps handle_exception, returns the decorator created from handle_exception. Useful for repetitive use of handle_exception decorator."""
     return handle_exception(handler, excepted)
 
 
-def exception_handler(excepted = BaseException, *extra_excepted):
+def exception_handler(excepted = RuntimeError, *extra_excepted):
     """
     Wraps create_exception_handler function, decorate a handler function with this to convert it to a decorator.
     
@@ -114,7 +114,7 @@ def exception_handler(excepted = BaseException, *extra_excepted):
         def handler(exception):
             pass
         """
-        return create_exception_handler(excepted,BaseException)
+        return create_exception_handler(excepted,RuntimeError)
     else:
         """
         If used like:

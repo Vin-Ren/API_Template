@@ -38,7 +38,7 @@ class Timer:
     
     @property
     def elapsed(self):
-        return self.end_time-self.current_time if self.start_time is not None and self.current_time is not None else 0
+        return self.current_time-self.start_time if self.start_time is not None and self.current_time is not None else 0
 
     @property
     def duration(self):

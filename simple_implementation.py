@@ -121,6 +121,8 @@ class OsuAPI(API):
     def _init(self):
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36'}
         
+        self[DownloadManager].register_defaults()
+        
         cookies_manager = self[CookiesManager] # not required for typehints anymore but dry
         try:
             cookies_manager.load_cookies()

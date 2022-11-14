@@ -34,6 +34,6 @@ def make_progress_bar(value: int, length: int = 40, title: str = ' ', value_min 
     block_index = math.floor(in_progress_block_size/base)
     # print(value, prog_percentage, visualized_size, completed_blocks_size, in_progress_block_size, block_index)
     progress_bars = "█"*completed_blocks_size + blocks[block_index]
-    filler_spaces = ' ' * length-len(progress_bars)
+    filler_spaces = ' ' * (length-len(progress_bars))
     progress = lsep+progress_bars+filler_spaces+rsep
-    return "\r{title}{prefix}{bar}{value:.1f}%{suffix}".format(title=title, prefix=prefix, suffix=suffix, bar=progress, value=value*100)
+    return "\r{title}{prefix}{bar}{value:.1f}%{suffix}".format(title=title, prefix=prefix, suffix=suffix, bar=progress, value=prog_percentage*100)

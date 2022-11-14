@@ -49,16 +49,18 @@ class DownloadFileHandler(ReprMixin):
                     if len(content) <= 0:
                         break
                     dest_file.write(content)
+        os.remove(self.temporary_filename)
     
     def drop(self):
-        os.remove(os.path.abspath(os.path.join(self.TEMPORARY_DIR, self.temporary_filename)))
+        self.temp_handler.close()
+        os.remove(self.temporary_filename)
 
 
 class DownloadManager(BasePlugin):
     DOWNLOAD_CHUNK_SIZE = 512
     _repr_format = "<%(classname)s DOWNLOAD_CHUNK_SIZE=%(DOWNLOAD_CHUNK_SIZE)s session_kwargs=%(session_kwargs)s>" # Format of __repr__
     
-    REQUIRED_CONFIGS = dict(download_progress_bar_length=__import__('os').get_terminal_size().columns * (5/8))
+    REQUIRED_CONFIGS = dict(download_progress_bar_length=int(__import__('os').get_terminal_size().columns * (5/8)))
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -76,7 +78,7 @@ class DownloadManager(BasePlugin):
         return self
     
     def register_predownload_hook(self, hook):
-        self.progress_hooks.append(hook)
+        self.predownload_hooks.append(hook)
         return self
     
     def register_prog_hook(self, hook):
@@ -88,13 +90,13 @@ class DownloadManager(BasePlugin):
         return self
     
     def default_predownload_hook(self, progress: ProgressInfo):
-        progress.content_length = progress.stream.headers['Content-Length']
+        progress.content_length = int(progress.stream.headers['Content-Length'])
     
     def default_prog_hook(self, progress: ProgressInfo):
         suffix = " | {curr} of {max}    {speed} ({elapsed_time}s)"
         suffix = suffix.format(curr=metric_size_formatter(progress.pipe_handler.tell()), max=metric_size_formatter(progress.content_length), 
                                 speed=metric_size_formatter(round(progress.pipe_handler.tell()/progress.time_info.elapsed, 2), suffix='bps'), elapsed_time=round(progress.time_info.elapsed,2))
-        print(make_progress_bar(progress.pipe_handler.tell(), length=self.config.download_progress_bar_length, vmax=progress.content_length, suffix=suffix), end=' '*5)
+        print(make_progress_bar(progress.pipe_handler.tell(), length=self.config.download_progress_bar_length, value_max=progress.content_length, suffix=suffix), end=' '*5)
     
     def default_finished_hook(self, progress: ProgressInfo):
         print("Downloaded file in %ds" % round(progress.time_info.duration, 2))

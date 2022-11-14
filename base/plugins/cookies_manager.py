@@ -41,17 +41,19 @@ class CookiesManager(BasePlugin):
         self.api.session.cookies.update(cookies)
     
     def load_cookies(self, method=None, filename=None):
+        method = CookiesCachingMethod(method if method is not None else self.config.cookies_caching_method)
         filename = self.__cookies_resolve_filename(method=method, filename=filename)
         
+        # print('lc: ', filename, method)
         if method == CookiesCachingMethod.JSON:
             with open(filename, 'r') as f:
                 for entry in json.load(f):
-                    self.session.cookies.set(**entry)
+                    self.api.session.cookies.set(**entry)
         
         elif method == CookiesCachingMethod.SIMPLE_JSON:
             with open(filename, 'r') as f:
                 cookies = requests.utils.cookiejar_from_dict(json.load(f))
-                self.session.cookies.update(cookies)
+                self.api.session.cookies.update(cookies)
         
         elif method in [CookiesCachingMethod.TEXT, CookiesCachingMethod.TXT]:
             with open(filename, 'r') as f:
@@ -62,26 +64,29 @@ class CookiesManager(BasePlugin):
         
         elif method == CookiesCachingMethod.PICKLE:
             with open(filename, 'rb') as f:
-                self.session.cookies.update(pickle.load(f))
+                self.api.session.cookies.update(pickle.load(f))
+        # print('done')
     
     def dump_cookies(self, method=None, filename=None):
+        method = CookiesCachingMethod(method if method is not None else self.config.cookies_caching_method)
         filename = self.__cookies_resolve_filename(method=method, filename=filename)
-        
+        # print('dc: ', filename, method)
         if method == CookiesCachingMethod.JSON:
             cookie_attrs = ["version", "name", "value", "port", "domain", "path", "secure",
                             "expires", "discard", "comment", "comment_url", "rfc2109"]
             with open(filename, 'w') as f:
-                json.dump([{attr: getattr(cookie, attr) for attr in cookie_attrs} for cookie in self.session.cookies], f, indent=4)
+                json.dump([{attr: getattr(cookie, attr) for attr in cookie_attrs} for cookie in self.api.session.cookies], f, indent=4)
         
         elif method == CookiesCachingMethod.SIMPLE_JSON:
             with open(filename, 'w') as f:
-                json.dump(requests.utils.dict_from_cookiejar(self.session.cookies), f)
+                json.dump(requests.utils.dict_from_cookiejar(self.api.session.cookies), f)
         
         elif method in [CookiesCachingMethod.TEXT, CookiesCachingMethod.TXT]:
             with open(filename, 'w') as f:
-                cookies_entries = requests.utils.dict_from_cookiejar(self.session.cookies)
+                cookies_entries = requests.utils.dict_from_cookiejar(self.api.session.cookies)
                 f.write("; ".join(["{}={}".format(k,v) for k,v in cookies_entries.items()]))
         
         elif method == CookiesCachingMethod.PICKLE:
             with open(filename, 'wb') as f:
-                pickle.dump(self.session.cookies, f, pickle.HIGHEST_PROTOCOL)
+                pickle.dump(self.api.session.cookies, f, pickle.HIGHEST_PROTOCOL)
+        # print("done")
