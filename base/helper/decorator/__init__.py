@@ -6,8 +6,8 @@ from typing import Dict, List, Any, Tuple, Union, Callable
 
 from requests import Response
 
-from .exception import MissingAttribute, FailedCheck
-from .placeholder import LibraryPlaceholder
+from ..exception import MissingAttribute, FailedCheck
+from ..placeholder import LibraryPlaceholder
 
 
 def require_attrs(required_attr_names: List[str]):
