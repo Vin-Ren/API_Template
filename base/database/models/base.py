@@ -118,6 +118,14 @@ class Model(ReprMixin, metaclass=ModelMeta):
         return "SELECT * FROM %s WHERE %s" % (cls.table_name, comparator.make_query())
     
     @classmethod
+    def make_delete_query(cls, comparator=None, delete_all=False):
+        if comparator is None:
+            if delete_all:
+                return "DELETE FROM %s" % (cls.table_name)
+            raise RuntimeError("make_delete_query is called with no comparator!") # protective measures
+        return "DELETE FROM %s WHERE %s" % (cls.table_name, comparator.make_query())
+
+    @classmethod
     def db_manager_registered(cls, raise_err=True):
         if cls.DB_MANAGER is None:
             if raise_err:
@@ -133,7 +141,7 @@ class Model(ReprMixin, metaclass=ModelMeta):
     @classmethod
     def parse_from_db(cls, db_entry_data: dict):
         return cls({k: cls.__FIELDS__[k].invert_value_conversion(v) for k, v in db_entry_data.items()})
-    
+
     @classmethod
     def get(cls, *statements):
         if cls.db_manager_registered():
@@ -143,3 +151,8 @@ class Model(ReprMixin, metaclass=ModelMeta):
     def get_all(cls):
         if cls.db_manager_registered():
             return cls.DB_MANAGER.get_all(cls)
+
+    @classmethod
+    def delete(cls, *statements):
+        if cls.db_manager_registered():
+            return cls.DB_MANAGER.delete(cls, AND(*statements))

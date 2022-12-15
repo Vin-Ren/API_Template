@@ -83,7 +83,7 @@ class SQLiteDB(BaseManager):
         for query_string, execute_many_values in query_groups.items():
             self.cursor.executemany(query_string, execute_many_values)
             self.commit() # Commit for every model group.
-    
+
     def _select(self, select_query):
         self.cursor.execute(select_query)
         return self.cursor.fetchall()
@@ -97,6 +97,9 @@ class SQLiteDB(BaseManager):
     
     def get_all(self, model: Model):
         return self.get(model)
+
+    def delete(self, model: Model, statements=None):
+        return self.execute(model.make_delete_query(statements))
 
 
 class MultiThreadedSQLiteDB(SQLiteDB):
