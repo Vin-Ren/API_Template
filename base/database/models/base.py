@@ -98,10 +98,10 @@ class Model(ReprMixin, metaclass=ModelMeta):
             try:
                 entry_data[field.name] = field.convert_value(self[name_in_obj])
             except KeyError:
-                if not field.opts['NOT NULL']:
+                if not field.opts.get('NOT NULL', False):
                     entry_data[field.name] = None
                     continue
-                if field.default is None:
+                if field.default is None and not field.opts.get('AUTO INCREMENT', False):
                     raise KeyError("'{}' is required but not found in data.".format(field.name))
                 entry_data[field.name] = field.get_default_value()
         return entry_data
