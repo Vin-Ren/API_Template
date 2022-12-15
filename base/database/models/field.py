@@ -24,7 +24,7 @@ class SQLiteConverter(BaseConverter):
     OPTS = {'not_null': 'NOT NULL', 'primary_key':'PRIMARY KEY', 'auto_increment':'AUTO INCREMENT', 'unique':'UNIQUE'}
     TYPE = {int:'INTEGER', str:'TEXT', blob:'BLOB', float:'REAL', datetime:'REAL', bool:'INTEGER', NoneType:'NULL'}
     VALUE = {int: int, str: str, float:float, 
-            datetime: lambda dt:(datetime.fromisoformat(dt) if isinstance(dt, str) else datetime.fromtimestamp(dt) if isinstance(dt, (int, float)) else dt).replace(tzinfo=timezone.utc), 
+            datetime: lambda dt:(datetime.fromisoformat(dt) if isinstance(dt, str) else datetime.fromtimestamp(dt) if isinstance(dt, (int, float)) else dt).replace(tzinfo=timezone.utc).timestamp(), 
             bool: lambda _bool:1 if _bool else 0, -1: str}
     REVERSE_VALUE = {int: int, str:str, float:float, 
                     datetime: lambda _i:datetime.utcfromtimestamp(_i),

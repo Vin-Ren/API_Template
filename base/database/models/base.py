@@ -129,6 +129,10 @@ class Model(ReprMixin, metaclass=ModelMeta):
     def create_table(cls):
         if cls.db_manager_registered():
             return cls.DB_MANAGER.create_table(cls)
+
+    @classmethod
+    def parse_from_db(cls, db_entry_data: dict):
+        return cls({k: cls.__FIELDS__[k].invert_value_conversion(v) for k, v in db_entry_data.items()})
     
     @classmethod
     def get(cls, *statements):
