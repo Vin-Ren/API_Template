@@ -54,7 +54,7 @@ class JoinOperator(BinaryOperator):
         self.statements = statements
     
     def make_query(self):
-        return ' {} '.format(self.__class__.OPERATOR).join(self.statements)
+        return ' {} '.format(self.__class__.OPERATOR).join([statement.make_query() for statement in self.statements])
 
 
 # Operators
