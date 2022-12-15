@@ -63,9 +63,17 @@ class SQLiteDB(BaseManager):
         self.cursor.execute(model.make_create_query())
         self.commit()
     
+    def drop_table(self, model: Union[ModelMeta, Model]):
+        self.cursor.execute(model.make_drop_query())
+        self.commit()
+
     def create_model(self, model):
         """Alias for craete_table"""
         self.create_table(model)
+
+    def drop_model(self, model):
+        """Alias for drop_table"""
+        self.drop_table(model)
     
     def insert(self, obj: Model, **insertKwargs):
         self.cursor.execute(*obj.make_insert_args(**insertKwargs))
@@ -99,7 +107,7 @@ class SQLiteDB(BaseManager):
         return self.get(model)
 
     def delete(self, model: Model, statements=None):
-        self.execute(model.make_delete_query(statements))
+        self.cursor.execute(model.make_delete_query(statements))
         self.commit()
 
 

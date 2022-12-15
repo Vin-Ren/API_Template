@@ -76,6 +76,11 @@ class Model(ReprMixin, metaclass=ModelMeta):
     
     @classmethod
     @cached()
+    def make_drop_query(cls):
+        return """DROP TABLE IF EXISTS {table_name}""".format(table_name=cls.table_name)
+
+    @classmethod
+    @cached()
     def make_create_query(cls):
         _s = """CREATE TABLE IF NOT EXISTS "{table_name}"({queries})"""
         fields_queries = [field.generate_field_query() for field in cls.__FIELDS__.values()]
