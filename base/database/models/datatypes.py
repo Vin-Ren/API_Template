@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 ForeignKey = namedtuple('ForeignKey', ('key', 'referenced_table', 'referenced_key'))
-BLOB = blob = type('BLOB')
+BLOB = blob = type('BLOB', (), {})
 INT = Int = int
 STR = Str = str
 FLOAT = Float = float

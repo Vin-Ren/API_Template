@@ -90,14 +90,15 @@ class Field(ReprMixin):
     @cached()
     def generate_field_query(self):
         type_str = self.get_type_str()
-        opts_str = " ".join([opt for opt, enabled in self.opts.items() if enabled])
-        default_str = "DEFAULT {}".format(self.get_default_value()) if self.default is not None else ''
+        opts_str = " ".join([opt for opt, enabled in self.opts.items() if enabled and opt not in ['PRIMARY KEY', 'AUTO INCREMENT']]).strip()
+        default_str = "DEFAULT {}".format(repr(self.get_default_value())) if self.default is not None else ''
         
+        primary_key_str = (""",\nPRIMARY KEY({})""".format('"{}" {}'.format(self.name, "AUTOINCREMENT" if self.opts.get('AUTO INCREMENT', False) else "").strip())) if self.opts.get('PRIMARY KEY', False) else ""
         foreign_key_str = (""",\nFOREIGN KEY({0.key}) REFERENCES "{0.referenced_table}"("{0.referenced_key}")""".format(self.foreign_key)) if self.foreign_key is not None and len(self.foreign_key) >= 3 else ""
         
         # Similiar to => _s = "{name} {type} {settings} {default} {foreign_key}"
         # but dumps extra unnecessary spaces.
         entries = [self.name, type_str, opts_str, default_str]
         sub_strings = [phrase for phrase in entries if phrase.strip()]
-        return (" ".join(sub_strings), foreign_key_str)
+        return (" ".join(sub_strings), primary_key_str+foreign_key_str)
 
