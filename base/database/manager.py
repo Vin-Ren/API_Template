@@ -99,7 +99,8 @@ class SQLiteDB(BaseManager):
         return self.get(model)
 
     def delete(self, model: Model, statements=None):
-        return self.execute(model.make_delete_query(statements))
+        self.execute(model.make_delete_query(statements))
+        self.commit()
 
 
 class MultiThreadedSQLiteDB(SQLiteDB):
