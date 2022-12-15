@@ -98,7 +98,7 @@ class Model(ReprMixin, metaclass=ModelMeta):
             try:
                 entry_data[field.name] = field.convert_value(self[name_in_obj])
             except KeyError:
-                if not field.settings['NOT NULL']:
+                if not field.opts['NOT NULL']:
                     entry_data[field.name] = None
                     continue
                 if field.default is None:
