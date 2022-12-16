@@ -13,6 +13,7 @@ class BaseConverter:
     OPTS = {'not_null': 'NOT NULL', 'primary_key':'PRIMARY KEY', 'auto_increment':'AUTO INCREMENT', 'unique':'UNIQUE'}
     TYPE = {int:'INTEGER', str:'TEXT', blob:'BLOB', float:'REAL', datetime:'REAL', bool:'INTEGER', NoneType:'NULL'}
     VALUE = {int: int, str: str, float:float, 
+            blob: str, 
             datetime: lambda dt:dt.timestamp(), 
             bool: lambda _bool:1 if _bool else 0, -1: str}
     REVERSE_VALUE = {int: int, str:str, float:float, 
@@ -23,10 +24,12 @@ class BaseConverter:
 class SQLiteConverter(BaseConverter):
     OPTS = {'not_null': 'NOT NULL', 'primary_key':'PRIMARY KEY', 'auto_increment':'AUTO INCREMENT', 'unique':'UNIQUE'}
     TYPE = {int:'INTEGER', str:'TEXT', blob:'BLOB', float:'REAL', datetime:'REAL', bool:'INTEGER', NoneType:'NULL'}
-    VALUE = {int: int, str: str, float:float, 
+    VALUE = {int: int, str: lambda s:str(s) if s is not None else None, float:float, 
+            blob: lambda s:str(s) if s is not None else None,
             datetime: lambda dt:(datetime.fromisoformat(dt) if isinstance(dt, str) else datetime.fromtimestamp(dt) if isinstance(dt, (int, float)) else dt).replace(tzinfo=timezone.utc).timestamp(), 
             bool: lambda _bool:1 if _bool else 0, -1: str}
-    REVERSE_VALUE = {int: int, str:str, float:float, 
+    REVERSE_VALUE = {int: int, str: lambda s:str(s) if s is not None else None, float:float, 
+                    blob: lambda s:str(s) if s is not None else None,
                     datetime: lambda _i:datetime.utcfromtimestamp(_i),
                     bool: bool, -1: str}
 
