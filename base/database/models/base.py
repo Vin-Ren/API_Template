@@ -4,7 +4,7 @@ from .field import Field
 
 from ...helper.decorator import cached
 from ...helper.class_mixin import ReprMixin
-from .statement import AND, SelectQuery
+from .statement import AND, Limit, OrderBy, SelectQuery
 
 
 class ModelMeta(type):
@@ -118,7 +118,11 @@ class Model(ReprMixin, metaclass=ModelMeta):
     
     @classmethod
     def make_select_query(cls, comparator=None, orderby=None, limit=None):
-        return SelectQuery(table_name=cls.table_name, comparator=comparator, orderby=orderby, limit=limit)
+        if isinstance(orderby, tuple):
+            orderby = [orderby]
+        if isinstance(limit, int):
+            limit = [limit]
+        return SelectQuery(table_name=cls.table_name, comparator=comparator, orderby=OrderBy(orderby), limit=Limit(*limit))
     
     @classmethod
     def make_delete_query(cls, comparator=None, delete_all=False):
