@@ -65,16 +65,19 @@ class CursorProxy:
             self.proxy_connection.row_factory = self.connection.row_factory
             self.proxy_cursor = self.proxy_connection.cursor()
             while True:
-                task: CursorTask = self.queue.get(True)
-                res = None
-                if task.target_method.__contains__('.'):
-                    method = self.proxy_cursor
-                    for accessor in task.target_method.split('.'):
-                        method = method.__getattribute__(accessor)
-                    res = method(*task.args, **task.kwargs)
-                else:
-                    res = self.proxy_cursor.__getattribute__(task.target_method)(*task.args, **task.kwargs)
-                task.result_q.put(res)
+                try:
+                    task: CursorTask = self.queue.get(True)
+                    res = None
+                    if task.target_method.__contains__('.'):
+                        method = self.proxy_cursor
+                        for accessor in task.target_method.split('.'):
+                            method = method.__getattribute__(accessor)
+                        res = method(*task.args, **task.kwargs)
+                    else:
+                        res = self.proxy_cursor.__getattribute__(task.target_method)(*task.args, **task.kwargs)
+                    task.result_q.put(res)
+                except Exception as exc:
+                    continue
         finally:
             self.proxy_cursor.close()
     
