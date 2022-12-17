@@ -90,6 +90,16 @@ class Field(ReprMixin):
     def get_default_value(self):
         return self.convert_value(self.default) if self.default is not None else None
     
+    @property
+    def ASC(self):
+        "For OrderBy statement"
+        return (self.name, 'ASC')
+
+    @property
+    def DESC(self):
+        "For OrderBy statement"
+        return (self.name, 'DESC')
+
     @cached()
     def generate_field_query(self):
         type_str = self.get_type_str()

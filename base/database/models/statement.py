@@ -1,4 +1,5 @@
 import abc
+from typing import List, Tuple, Literal
 
 
 # Base Classes
@@ -28,7 +29,7 @@ class BaseOperator(Statement):
     pass
 
 
-class UnaryOperator(BaseComparator):
+class UnaryOperator(BaseOperator):
     OPERATOR = ''
     def __init__(self, statement:Statement):
         self.statement = statement
@@ -37,7 +38,7 @@ class UnaryOperator(BaseComparator):
         return '{} {}'.format(self.__class__.OPERATOR, self.statement)
 
 
-class BinaryOperator(BaseComparator):
+class BinaryOperator(BaseOperator):
     OPERATOR = ''
     def __init__(self, left:Statement, right:Statement):
         self.left = left
@@ -103,3 +104,64 @@ class Comparator(BaseComparator):
     
     def make_query(self):
         return "{} {} {}".format(self.name, self.op, self.value)
+
+
+class OrderBy(Statement):
+    def __init__(self, column_order_pair: List[Tuple[str, Literal['ASC', 'DESC']]]):
+        self.column_order_pair = column_order_pair
+
+    def make_query(self):
+        return "ORDER BY {}".format(", ".join(["{} {}".format(*e) for e in self.column_order_pair]))
+
+
+class Limit(Statement):
+    def __init__(self, row_count, offset=0):
+        self.row_count = row_count
+        self.offset = offset
+
+    def make_query(self):
+        return "LIMIT {},{}".format(self.row_count, self.offset)
+
+
+class Query(Statement):
+    pass
+
+
+class SelectQuery(Query):
+    def __init__(self, table_name, comparator=None, orderby=None, limit=None):
+        self.table_name = table_name
+        self.comparator = comparator
+        self.orderby = orderby
+        self.limit = limit
+
+    def where(self, comparator):
+        if self.comparator is None:
+            self.comparator = comparator
+        else:
+            self.comparator = AND(self.comparator, comparator)
+        return self
+
+    def limit(self, *args, **kwargs):
+        self.limit = Limit(*args, **kwargs)
+        return self
+
+    def orderby(self, *additional_orderby_pairs):
+        if self.orderby is None:
+            self.orderby = OrderBy(additional_orderby_pairs)
+        else:
+            self.orderby.column_order_pair.extend(additional_orderby_pairs)
+        return self
+
+    def make_query(self):
+        s = "SELECT * FROM {}".format(self.table_name)
+        if self.comparator is not None:
+            # the spaces are intentional for spacing
+            s += ' WHERE ' + self.comparator.make_query()
+        if self.orderby is not None:
+            s += ' ' + self.orderby.make_query()
+        if self.limit is not None:
+            s += ' ' + self.limit.make_query()
+        return s
+
+    def execute(self, database):
+        return database._select(self.make_query())

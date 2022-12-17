@@ -99,16 +99,17 @@ class SQLiteDB(BaseManager):
     def select(self, select_query):
         return self._select(select_query)
     
-    def get(self, model: Model, statements=None):
+    def get(self, model: Model, comparators=None, **kwargs):
         model = model.__class__ if isinstance(model, Model) else model
-        for entry in self._select(model.make_select_query(statements)):
+        select_query = model.make_select_query(comparators, **kwargs)
+        for entry in self._select(select_query.make_query()):
             yield model.parse_from_db(entry)
     
     def get_all(self, model: Model):
         return self.get(model)
 
-    def delete(self, model: Model, statements=None):
-        self.cursor.execute(model.make_delete_query(statements))
+    def delete(self, model: Model, comparators=None):
+        self.cursor.execute(model.make_delete_query(comparators))
         self.commit()
 
 

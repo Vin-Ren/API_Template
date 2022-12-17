@@ -4,7 +4,7 @@ from .field import Field
 
 from ...helper.decorator import cached
 from ...helper.class_mixin import ReprMixin
-from .statement import AND
+from .statement import AND, SelectQuery
 
 
 class ModelMeta(type):
@@ -117,10 +117,8 @@ class Model(ReprMixin, metaclass=ModelMeta):
         return (query, values)
     
     @classmethod
-    def make_select_query(cls, comparator=None):
-        if comparator is None:
-            return "SELECT * FROM %s" % (cls.table_name)
-        return "SELECT * FROM %s WHERE %s" % (cls.table_name, comparator.make_query())
+    def make_select_query(cls, comparator=None, orderby=None, limit=None):
+        return SelectQuery(table_name=cls.table_name, comparator=comparator, orderby=orderby, limit=limit)
     
     @classmethod
     def make_delete_query(cls, comparator=None, delete_all=False):
@@ -148,9 +146,10 @@ class Model(ReprMixin, metaclass=ModelMeta):
         return cls({k: cls.__FIELDS__[k].invert_value_conversion(v) for k, v in db_entry_data.items()})
 
     @classmethod
-    def get(cls, *statements):
+    def get(cls, *comparators, **kwargs):
         if cls.db_manager_registered():
-            return cls.DB_MANAGER.get(cls, AND(*statements)) if len(statements) > 0 else cls.get_all()
+            comparators = AND(*comparators) if len(comparators) > 0 else None
+            return cls.DB_MANAGER.get(cls, comparators, **kwargs)
     
     @classmethod
     def get_all(cls):
@@ -158,9 +157,9 @@ class Model(ReprMixin, metaclass=ModelMeta):
             return cls.DB_MANAGER.get_all(cls)
 
     @classmethod
-    def delete(cls, *statements):
+    def delete(cls, *comparators):
         if cls.db_manager_registered():
-            return cls.DB_MANAGER.delete(cls, AND(*statements))
+            return cls.DB_MANAGER.delete(cls, AND(*comparators))
 
     def to_dict(self):
         return self.__dict__
