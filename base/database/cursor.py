@@ -65,6 +65,7 @@ class CursorProxy:
             self.proxy_connection.row_factory = self.connection.row_factory
             self.proxy_cursor = self.proxy_connection.cursor()
             while True:
+                task = None
                 try:
                     task: CursorTask = self.queue.get(True)
                     res = None
@@ -77,7 +78,8 @@ class CursorProxy:
                         res = self.proxy_cursor.__getattribute__(task.target_method)(*task.args, **task.kwargs)
                     task.result_q.put(res)
                 except Exception as exc:
-                    continue
+                    if task is not None:
+                        task.result_q.put(exc)
         finally:
             self.proxy_cursor.close()
     
