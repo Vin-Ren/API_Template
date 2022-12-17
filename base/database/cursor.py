@@ -1,12 +1,25 @@
-from collections import namedtuple
 from queue import Queue
 import sqlite3
 from threading import Thread
-
 from typing import Dict, Tuple
 
 
-CursorTask = namedtuple('CursorTask', ['target_method', 'args', 'kwargs'])
+class CursorTask:
+    """A CursorTask object, using Queue to block until result is available"""
+    def __init__(self, target_method, args, kwargs):
+        self.target_method = target_method
+        self.args = args
+        self.kwargs = kwargs
+        self.result_q = Queue()
+        self.done = False
+    
+    def get_result(self, block=True, timeout=None):
+        """Calls result_q.get"""
+        if self.done:
+            return
+        rv = self.result_q.get(block=block, timeout=timeout)
+        self.done = True
+        return rv
 
 
 class CursorProxy:
@@ -52,18 +65,22 @@ class CursorProxy:
             self.proxy_cursor = self.proxy_connection.cursor()
             while True:
                 task: CursorTask = self.queue.get(True)
+                res = None
                 if task.target_method.__contains__('.'):
                     method = self.proxy_cursor
                     for accessor in task.target_method.split('.'):
                         method = method.__getattribute__(accessor)
-                    method(*task.args, **task.kwargs)
+                    res = method(*task.args, **task.kwargs)
                 else:
-                    self.proxy_cursor.__getattribute__(task.target_method)(*task.args, **task.kwargs)
+                    res = self.proxy_cursor.__getattribute__(task.target_method)(*task.args, **task.kwargs)
+                task.result_q.put(res)
         finally:
             self.proxy_cursor.close()
     
     def enqueue_task(self, method_name: str, args: Tuple, kwargs: Dict, return_value: bool = False):
-        return self.queue.put(CursorTask(method_name, args, kwargs))
+        task = CursorTask(method_name, args, kwargs)
+        self.queue.put(task)
+        return task
     
     def make_proxy(self, method_name: str):
         if not hasattr(self.proxy_cursor, method_name):
@@ -72,10 +89,20 @@ class CursorProxy:
             return self.proxy(method_name, *args, **kwargs)
         return _proxy
 
-    def proxy(self, method_name: str, *args, immediate: bool = False, **kwargs):
-        if immediate:
-            return self.cursor.__getattribute__(method_name)(*args, **kwargs)
-        return self.enqueue_task(method_name, args=args, kwargs=kwargs)
+    def proxy(self, method_name: str, *args, block: bool = False, **kwargs):
+        task = self.enqueue_task(method_name, args=args, kwargs=kwargs)
+        if not block:
+            return task
+        return task.get_result(block=True)
 
     def commit_proxy(self):
         return self.proxy('connection.commit')
+    
+    def fetchone(self, *args, **kwargs):
+        return self.proxy('fetchone', *args, *kwargs, block=True)
+    
+    def fetchmany(self, *args, **kwargs):
+        return self.proxy('fetchmany', *args, *kwargs, block=True)
+    
+    def fetchall(self, *args, **kwargs):
+        return self.proxy('fetchall', *args, *kwargs, block=True)

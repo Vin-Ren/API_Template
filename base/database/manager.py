@@ -119,7 +119,3 @@ class MultiThreadedSQLiteDB(SQLiteDB):
         self.cursor: CursorProxy = CursorProxy(self.database, self._cursor)
         self._commit = self.commit
         self.commit = self.cursor.commit_proxy
-    
-    def _select(self, select_query):
-        self._cursor.execute(select_query)
-        return self._cursor.fetchall()
