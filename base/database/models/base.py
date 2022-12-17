@@ -161,3 +161,6 @@ class Model(ReprMixin, metaclass=ModelMeta):
     def delete(cls, *statements):
         if cls.db_manager_registered():
             return cls.DB_MANAGER.delete(cls, AND(*statements))
+
+    def to_dict(self):
+        return self.__dict__
