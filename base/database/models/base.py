@@ -119,11 +119,11 @@ class Model(ReprMixin, metaclass=ModelMeta):
     
     @classmethod
     def make_select_query(cls, comparator: Union[Comparator, NoneType] = None, orderby: Union[OrderBy, Iterable[Tuple], Tuple]= None, limit: Union[Limit, int, Tuple] = None) -> SelectQuery:
-        if not isinstance(orderby, OrderBy):
+        if not isinstance(orderby, (OrderBy, NoneType)):
             if isinstance(orderby, tuple):
                 orderby = [orderby]
             orderby = OrderBy(orderby)
-        if not isinstance(limit, Limit):
+        if not isinstance(limit, (Limit, NoneType)):
             if isinstance(limit, int):
                 limit = [limit]
             limit = Limit(*limit)
