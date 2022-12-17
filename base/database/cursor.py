@@ -62,6 +62,7 @@ class CursorProxy:
     def process_queued_tasks(self):
         try:
             self.proxy_connection = sqlite3.connect(self.database)
+            self.proxy_connection.row_factory = self.connection.row_factory
             self.proxy_cursor = self.proxy_connection.cursor()
             while True:
                 task: CursorTask = self.queue.get(True)
