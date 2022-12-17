@@ -102,7 +102,7 @@ class CursorProxy:
         return task.get_result(block=True)
     
     def blocking_proxy(self, method_name: str, *args, **kwargs) -> Any:
-        return self.proxy(method_name=method_name, *args, **kwargs)
+        return self.proxy(method_name=method_name, *args, block=True, **kwargs)
 
     def commit_proxy(self):
         return self.proxy('connection.commit')
