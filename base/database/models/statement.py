@@ -120,10 +120,7 @@ class Limit(Statement):
         self.offset = offset
 
     def make_query(self):
-        s = "LIMIT {}".format(self.row_count)
-        if self.offset > 0:
-            s+=",{}".format(self.offset)
-        return s
+        return "LIMIT {},{}".format(self.offset, self.row_count)
 
 
 class Query(Statement):
