@@ -101,7 +101,8 @@ class SQLiteDB(BaseManager):
     
     def get(self, model: Model, statements=None):
         model = model.__class__ if isinstance(model, Model) else model
-        return [model.parse_from_db(entry) for entry in self._select(model.make_select_query(statements))]
+        for entry in self._select(model.make_select_query(statements)):
+            yield model.parse_from_db(entry)
     
     def get_all(self, model: Model):
         return self.get(model)

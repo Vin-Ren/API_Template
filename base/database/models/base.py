@@ -150,7 +150,7 @@ class Model(ReprMixin, metaclass=ModelMeta):
     @classmethod
     def get(cls, *statements):
         if cls.db_manager_registered():
-            return cls.DB_MANAGER.get(cls, AND(*statements))
+            return cls.DB_MANAGER.get(cls, AND(*statements)) if len(statements) > 0 else cls.get_all()
     
     @classmethod
     def get_all(cls):
