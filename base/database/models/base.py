@@ -118,11 +118,15 @@ class Model(ReprMixin, metaclass=ModelMeta):
     
     @classmethod
     def make_select_query(cls, comparator=None, orderby=None, limit=None):
-        if isinstance(orderby, tuple):
-            orderby = [orderby]
-        if isinstance(limit, int):
-            limit = [limit]
-        return SelectQuery(table_name=cls.table_name, comparator=comparator, orderby=OrderBy(orderby), limit=Limit(*limit))
+        if not isinstance(orderby, OrderBy):
+            if isinstance(orderby, tuple):
+                orderby = [orderby]
+            orderby = OrderBy(orderby)
+        if not isinstance(limit, Limit):
+            if isinstance(limit, int):
+                limit = [limit]
+            limit = Limit(*limit)
+        return SelectQuery(table_name=cls.table_name, comparator=comparator, orderby=orderby, limit=limit)
     
     @classmethod
     def make_delete_query(cls, comparator=None, delete_all=False):
