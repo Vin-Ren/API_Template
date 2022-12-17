@@ -121,5 +121,5 @@ class _Field(ReprMixin):
 
 
 class Field(_Field):
-    def __init__(self, _type: type, name: str = None, *_, default: Any = None, foreign_key: ForeignKey = None, primary_key: bool = False, not_null: bool = False, auto_increment: bool = False, unique: bool = False):
-        super().__init__(_type, name, *_, default=default, foreign_key=foreign_key, primary_key=primary_key, not_null=not_null, auto_increment=auto_increment, unique=unique)
+    def __init__(self, _type: type, name: str = None, *_, default: Any = None, foreign_key: ForeignKey = None, primary_key: bool = False, not_null: bool = False, auto_increment: bool = False, unique: bool = False, **kwargs):
+        super().__init__(_type, name, *_, default=default, foreign_key=foreign_key, primary_key=primary_key, not_null=not_null, auto_increment=auto_increment, unique=unique, **kwargs)
