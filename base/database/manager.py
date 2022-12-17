@@ -1,6 +1,6 @@
 
 import sqlite3
-from typing import List, Union
+from typing import Iterator, List, Union
 
 from .models.base import Model, ModelMeta
 from ..helper.class_mixin import ReprMixin
@@ -12,8 +12,8 @@ class BaseManager(ReprMixin):
     TABLES = []
     _repr_format = "<%(classname)s DB Manager>"
     
-    def __init__(self, database:str, *, initialize=True):
-        self.database=database
+    def __init__(self, database: str, *, initialize: bool = True):
+        self.database = database
         
         if initialize:
             self._init()
@@ -28,7 +28,7 @@ class SQLiteDB(BaseManager):
     
     _repr_format = "<%(classname)s Manager>"
     
-    def __init__(self, database: str, *, initialize=True):
+    def __init__(self, database: str, *, initialize: bool = True):
         self.database = database
         self.connection = sqlite3.connect(database=self.database)
         self.connection.row_factory = self.row_factory
@@ -38,7 +38,7 @@ class SQLiteDB(BaseManager):
             self._init()
     
     @staticmethod
-    def row_factory(cursor, row):
+    def row_factory(cursor, row) -> dict:
         return {col[0]:row[i] for i, col in enumerate(cursor.description)}
     
     def execute(self, *args, **kwargs):
@@ -92,20 +92,20 @@ class SQLiteDB(BaseManager):
             self.cursor.executemany(query_string, execute_many_values)
             self.commit() # Commit for every model group.
 
-    def _select(self, select_query):
+    def _select(self, select_query) -> List[dict]:
         self.cursor.execute(select_query)
         return self.cursor.fetchall()
     
-    def select(self, select_query):
+    def select(self, select_query) -> List[dict]:
         return self._select(select_query)
     
-    def get(self, model: Model, comparators=None, **kwargs):
+    def get(self, model: Model, comparators=None, **kwargs) -> Iterator[Model]:
         model = model.__class__ if isinstance(model, Model) else model
         select_query = model.make_select_query(comparators, **kwargs)
         for entry in self._select(select_query.make_query()):
             yield model.parse_from_db(entry)
     
-    def get_all(self, model: Model):
+    def get_all(self, model: Model) -> Iterator[Model]:
         return self.get(model)
 
     def delete(self, model: Model, comparators=None):

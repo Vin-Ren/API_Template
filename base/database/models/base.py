@@ -1,10 +1,11 @@
 
-from typing import Dict
+from types import NoneType
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from .field import Field
 
 from ...helper.decorator import cached
 from ...helper.class_mixin import ReprMixin
-from .statement import AND, Limit, OrderBy, SelectQuery
+from .statement import AND, Comparator, Limit, OrderBy, SelectQuery
 
 
 class ModelMeta(type):
@@ -71,17 +72,17 @@ class Model(ReprMixin, metaclass=ModelMeta):
             setattr(self, name, value)
     
     @property
-    def valid(self):
+    def valid(self) -> bool:
         return all(map(lambda key:key in self.__dict__, self.__FIELDS__.values()))
     
     @classmethod
     @cached()
-    def make_drop_query(cls):
+    def make_drop_query(cls) -> str:
         return """DROP TABLE IF EXISTS {table_name}""".format(table_name=cls.table_name)
 
     @classmethod
     @cached()
-    def make_create_query(cls):
+    def make_create_query(cls) -> str:
         _s = """CREATE TABLE IF NOT EXISTS "{table_name}"({queries})"""
         fields_queries = [field.generate_field_query() for field in cls.__FIELDS__.values()]
         field_queries = ", ".join([field_query[0] for field_query in fields_queries])
@@ -91,13 +92,13 @@ class Model(ReprMixin, metaclass=ModelMeta):
     
     @classmethod
     @cached()
-    def make_insert_query(cls, replace=False, ignore=False):
+    def make_insert_query(cls, replace=False, ignore=False) -> str:
         command = "INSERT " +("INTO OR IGNORE" if ignore else "OR REPLACE INTO" if replace else "INTO")
         _s = "{command} {table_name} VALUES ({values_placeholder})".format(command=command, table_name=cls.table_name, 
                                                                             values_placeholder=','.join([':{}'.format(field.name) for field in cls.__FIELDS__.values()]))
         return _s
     
-    def make_insert_values(self):
+    def make_insert_values(self) -> str:
         entry_data = {}
         for name_in_obj, field in self.__FIELDS__.items():
             try:
@@ -111,13 +112,13 @@ class Model(ReprMixin, metaclass=ModelMeta):
                 entry_data[field.name] = field.get_default_value()
         return entry_data
         
-    def make_insert_args(self, replace=False, ignore=False):
+    def make_insert_args(self, replace=False, ignore=False) -> Tuple[str, Any]:
         query = self.__class__.make_insert_query(replace=replace, ignore=ignore)
         values = self.make_insert_values()
         return (query, values)
     
     @classmethod
-    def make_select_query(cls, comparator=None, orderby=None, limit=None):
+    def make_select_query(cls, comparator: Union[Comparator, NoneType] = None, orderby: Union[OrderBy, Iterable[Tuple], Tuple]= None, limit: Union[Limit, int, Tuple] = None) -> SelectQuery:
         if not isinstance(orderby, OrderBy):
             if isinstance(orderby, tuple):
                 orderby = [orderby]
@@ -129,7 +130,7 @@ class Model(ReprMixin, metaclass=ModelMeta):
         return SelectQuery(table_name=cls.table_name, comparator=comparator, orderby=orderby, limit=limit)
     
     @classmethod
-    def make_delete_query(cls, comparator=None, delete_all=False):
+    def make_delete_query(cls, comparator=None, delete_all=False) -> str:
         if comparator is None:
             if delete_all:
                 return "DELETE FROM %s" % (cls.table_name)
@@ -137,7 +138,7 @@ class Model(ReprMixin, metaclass=ModelMeta):
         return "DELETE FROM %s WHERE %s" % (cls.table_name, comparator.make_query())
 
     @classmethod
-    def db_manager_registered(cls, raise_err=True):
+    def db_manager_registered(cls, raise_err=True) -> Optional[bool]:
         if cls.DB_MANAGER is None:
             if raise_err:
                 raise RuntimeError("No DB Manager registered for model '{}'.".format(cls.__name__))
@@ -150,17 +151,17 @@ class Model(ReprMixin, metaclass=ModelMeta):
             return cls.DB_MANAGER.create_table(cls)
 
     @classmethod
-    def parse_from_db(cls, db_entry_data: dict):
+    def parse_from_db(cls, db_entry_data: dict) -> 'Model':
         return cls({k: cls.__FIELDS__[k].invert_value_conversion(v) for k, v in db_entry_data.items()})
 
     @classmethod
-    def get(cls, *comparators, **kwargs):
+    def get(cls, *comparators, **kwargs) -> List['Model']:
         if cls.db_manager_registered():
             comparators = AND(*comparators) if len(comparators) > 0 else None
             return cls.DB_MANAGER.get(cls, comparators, **kwargs)
     
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> List['Model']:
         if cls.db_manager_registered():
             return cls.DB_MANAGER.get_all(cls)
 
@@ -169,5 +170,5 @@ class Model(ReprMixin, metaclass=ModelMeta):
         if cls.db_manager_registered():
             return cls.DB_MANAGER.delete(cls, AND(*comparators))
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return self.__dict__

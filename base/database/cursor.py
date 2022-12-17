@@ -1,19 +1,19 @@
 from queue import Queue
 import sqlite3
 from threading import Thread
-from typing import Dict, Tuple
+from typing import Any, Tuple, Union
 
 
 class CursorTask:
     """A CursorTask object, using Queue to block until result is available"""
-    def __init__(self, target_method, args, kwargs):
+    def __init__(self, target_method: str, args: tuple, kwargs: dict):
         self.target_method = target_method
         self.args = args
         self.kwargs = kwargs
         self.result_q = Queue()
         self.done = False
     
-    def get_result(self, block=True, timeout=None):
+    def get_result(self, block=True, timeout=None) -> Any:
         """Calls result_q.get"""
         if self.done:
             return
@@ -23,7 +23,7 @@ class CursorTask:
 
 
 class CursorProxy:
-    def __init__(self, database: str, cursor: sqlite3.Cursor = None, initialize = True):
+    def __init__(self, database: str, cursor: sqlite3.Cursor = None, initialize: bool = True):
         self.database = database
         self.connection: sqlite3.Connection = None
         self.cursor: sqlite3.Cursor = cursor
@@ -83,7 +83,7 @@ class CursorProxy:
         finally:
             self.proxy_cursor.close()
     
-    def enqueue_task(self, method_name: str, args: Tuple, kwargs: Dict, return_value: bool = False):
+    def enqueue_task(self, method_name: str, args: Tuple, kwargs: dict):
         task = CursorTask(method_name, args, kwargs)
         self.queue.put(task)
         return task
@@ -95,20 +95,23 @@ class CursorProxy:
             return self.proxy(method_name, *args, **kwargs)
         return _proxy
 
-    def proxy(self, method_name: str, *args, block: bool = False, **kwargs):
+    def proxy(self, method_name: str, *args, block: bool = False, **kwargs) -> Union[CursorTask, Any]:
         task = self.enqueue_task(method_name, args=args, kwargs=kwargs)
         if not block:
             return task
         return task.get_result(block=True)
+    
+    def blocking_proxy(self, method_name: str, *args, **kwargs) -> Any:
+        return self.proxy(method_name=method_name, *args, **kwargs)
 
     def commit_proxy(self):
         return self.proxy('connection.commit')
     
     def fetchone(self, *args, **kwargs):
-        return self.proxy('fetchone', *args, *kwargs, block=True)
+        return self.blocking_proxy('fetchone', *args, *kwargs)
     
     def fetchmany(self, *args, **kwargs):
-        return self.proxy('fetchmany', *args, *kwargs, block=True)
+        return self.blocking_proxy('fetchmany', *args, *kwargs)
     
     def fetchall(self, *args, **kwargs):
-        return self.proxy('fetchall', *args, *kwargs, block=True)
+        return self.blocking_proxy('fetchall', *args, *kwargs)
