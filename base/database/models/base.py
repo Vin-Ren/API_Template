@@ -66,14 +66,15 @@ class Model(ReprMixin, metaclass=ModelMeta):
             if field.is_valid(value):
                 super().__setattr__(name, value)
     
-    def __init__(self, _dict={}, *_, **kwargs):
+    def __init__(self, _dict=None, *_, **kwargs):
+        _dict = _dict if isinstance(_dict, dict) else {}
         _dict.update(kwargs)
         for name, value in _dict.items():
             setattr(self, name, value)
     
     @property
     def valid(self) -> bool:
-        return all(map(lambda key:key in self.__dict__, self.__FIELDS__.values()))
+        return all(map(lambda key:key in self.__dict__, self.__FIELDS__.keys()))
     
     @classmethod
     @cached()

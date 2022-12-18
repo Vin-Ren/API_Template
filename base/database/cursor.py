@@ -89,7 +89,7 @@ class CursorProxy:
         return task
     
     def make_proxy(self, method_name: str):
-        if not hasattr(self.proxy_cursor, method_name):
+        if not hasattr(self.cursor, method_name):
             raise AttributeError('\'{}\' is not found in this cursor object.'.format(method_name))
         def _proxy(*args, **kwargs):
             return self.proxy(method_name, *args, **kwargs)
